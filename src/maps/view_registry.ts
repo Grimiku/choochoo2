@@ -1,4 +1,3 @@
-import { ScotlandViewSettings } from "./scotland/view_settings";
 import { DCMetroViewSettings } from "./d_c_metro/view_settings";
 import { FinlandViewSettings } from "./finland/view_settings";
 import { GameKey } from "../api/game_key";
