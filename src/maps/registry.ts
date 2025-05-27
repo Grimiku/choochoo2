@@ -1,4 +1,3 @@
-import { DCMetroMapSettings } from "./d_c_metro/settings";
 import { FinlandMapSettings } from "./finland/settings";
 import { GameKey } from "../api/game_key";
 import { MapSettings } from "../engine/game/map_settings";
@@ -34,6 +33,7 @@ export class MapRegistry {
   private readonly maps = new Map<GameKey, MapSettings>();
 
   private constructor() {
+    this.add(new FinlandMapSettings());
     this.add(new DCMetroMapSettings());
     this.add(new FinlandMapSettings());
     this.add(new ScandinaviaMapSettings());
