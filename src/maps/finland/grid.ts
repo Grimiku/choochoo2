@@ -1,4 +1,5 @@
-import { SpaceData } from "../../engine/state/space";
+import { SpaceData, CityData } from "../../engine/state/space";
+import { SpaceType } from "../../engine/state/location_type";
 import { BLUE, RED, YELLOW, PURPLE } from "../../engine/state/good";
 import { Direction } from "../../engine/state/tile";
 import { duplicate } from "../../utils/functions";
@@ -13,6 +14,24 @@ import {
   UNPASSABLE,
   white,
 } from "../factory";
+
+const RUSSIA: CityData = {
+  type: SpaceType.CITY,
+  color: [],
+  name: "Russia",
+  goods: [],
+  onRoll: [],
+  startingNumCubes: 0,
+};
+
+const SWEDEN: CityData = {
+  type: SpaceType.CITY,
+  color: [],
+  name: "Sweden",
+  goods: [],
+  onRoll: [],
+  startingNumCubes: 0,
+};
 
 export const map = grid<SpaceData>([
     [...duplicate(16, WATER)],
@@ -46,7 +65,8 @@ export const map = grid<SpaceData>([
       WATER,
     ],  
     [
-      ...duplicate(5, WATER),
+      SWEDEN,
+      ...duplicate(4, WATER),
       ...duplicate(5, PLAIN),
       plain({ unpassableEdges: [Direction.TOP, Direction.TOP_RIGHT, Direction.BOTTOM_RIGHT] }),
       city("Tampere", PURPLE, [white(5)]),
@@ -201,7 +221,9 @@ export const map = grid<SpaceData>([
         ] }),
       plain({ unpassableEdges: [Direction.TOP_RIGHT, Direction.BOTTOM_RIGHT] }),
       plain({ unpassableEdges: [Direction.TOP_LEFT] }),
-      ...duplicate(4, UNPASSABLE),
+      UNPASSABLE,
+      RUSSIA,
+      ...duplicate(2, UNPASSABLE),
     ],
     [
       ...duplicate(4, UNPASSABLE),
