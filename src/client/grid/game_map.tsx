@@ -222,14 +222,19 @@ function maybeConfirmDeliveryCb(
     ) {
       if (maybeInterceptMove(moveAction, endingStop.name())) return;
       const income = moveInstance.value.calculateIncome(moveAction);
+      const hasNeutral = [...income].some(([owner]) => owner === PlayerColor.NEUTRAL);
       const counts = [...income]
-        .filter(([a]) => a != null)
+        .filter(([owner]) => owner != null && owner !== PlayerColor.NEUTRAL)
         .map(
           ([owner, income]) =>
             `${owner === player ? "you" : playerColorToString(owner)} ${income} income`,
         );
       const countsStr = counts.length > 0 ? counts.join(", ") : "zero income";
-      const message = `Deliver to ${endingStop.name()}? This will give ${countsStr}.`;
+      let message: string;
+      if(hasNeutral === true){
+        message = `Deliver to ${endingStop.name()}? This will use a neutral link and will give ${countsStr}.`;
+      } else {
+        message = `Deliver to ${endingStop.name()}? This will give ${countsStr}.`;}
       confirm(message, {
         confirmButton: "Confirm Delivery",
         cancelButton: "Cancel",

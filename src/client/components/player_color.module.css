@@ -38,6 +38,11 @@
   --player-color: rgb(151, 75, 54);
 }
 
+.neutral {
+  --player-color: #6b6a6a;
+  --player-color-text: white;
+}
+
 .unowned {
   --player-color-text: white;
   --player-color: grey;
