@@ -1,5 +1,3 @@
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { Fab, Tooltip } from "@mui/material";
 import {
   FormEvent,
   Fragment,
@@ -20,6 +18,7 @@ import { GameHistoryApi } from "../../api/history";
 import { MessageApi } from "../../api/message";
 import { Username } from "../components/username";
 import { isGameHistory, useGame } from "../services/game";
+import { Button, Form, Icon, Input, Popup } from "semantic-ui-react";
 
 export function GameLog() {
   const game = useGame();
@@ -52,14 +51,15 @@ export function ChatLog({ gameId }: ChatLogProps) {
   );
 
   return (
-    <div>
+    <div className={styles.chat}>
       <LogMessages
         messages={messages}
         fetchNextPage={hasNextPage ? fetchNextPage : undefined}
         disableNextPage={isLoading}
       />
-      <form onSubmit={onSubmit} className={styles.submitForm}>
-        <input
+      <Form onSubmit={onSubmit} className={styles.submitForm}>
+        <Input
+          fluid
           className={styles.submitInput}
           type="text"
           maxLength={255}
@@ -68,8 +68,16 @@ export function ChatLog({ gameId }: ChatLogProps) {
           onChange={setNewMessage}
           disabled={isPending}
         />
-        <input type="submit" value="Send" disabled={isPending} />
-      </form>
+        <Button
+          primary
+          style={{ marginLeft: "1em" }}
+          size="mini"
+          type="submit"
+          disabled={isPending}
+        >
+          Send
+        </Button>
+      </Form>
     </div>
   );
 }
@@ -170,11 +178,14 @@ function LogMessages({
       </div>
       {canScrollToBottom && (
         <div className={styles.scrollToBottomContainer}>
-          <Tooltip title="Scroll to bottom">
-            <Fab color="primary" size="small" onClick={scrollBottom}>
-              <ArrowDownwardIcon />
-            </Fab>
-          </Tooltip>
+          <Popup
+            content="Scroll to bottom"
+            trigger={
+              <Button primary size="small" icon circular onClick={scrollBottom}>
+                <Icon name="arrow down" />
+              </Button>
+            }
+          />
         </div>
       )}
     </div>

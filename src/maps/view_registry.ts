@@ -1,3 +1,4 @@
+import { DCMetroViewSettings } from "./d_c_metro/view_settings";
 import { FinlandViewSettings } from "./finland/view_settings";
 import { GameKey } from "../api/game_key";
 import { assert } from "../utils/validate";
@@ -31,6 +32,7 @@ export class ViewRegistry {
   private readonly maps = new Map<GameKey, MapViewSettings>();
 
   private constructor() {
+    this.add(new DCMetroViewSettings());
     this.add(new FinlandViewSettings());
     this.add(new ScandinaviaViewSettings());
     this.add(new NewEnglandViewSettings());

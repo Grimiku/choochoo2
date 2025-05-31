@@ -70,6 +70,7 @@ export const CreateGameApi = z
     turnDuration: z.number(),
     artificialStart: z.boolean(),
     unlisted: z.boolean(),
+    autoStart: z.boolean(),
   })
   .and(MapConfig)
   .refine((data) => data.gameKey === data.variant.gameKey, {
@@ -159,10 +160,7 @@ export const GameApi = GameLiteApi.extend({
 });
 export type GameApi = z.infer<typeof GameApi>;
 
-const OrderByOptions = z.union([
-  z.literal("id"),
-  z.literal("updatedAt"),
-]);
+const OrderByOptions = z.union([z.literal("id"), z.literal("updatedAt")]);
 
 export const GamePageCursor = z.string();
 export type GamePageCursor = z.infer<typeof GamePageCursor>;
@@ -251,7 +249,7 @@ export const gameContract = c.router({
     method: "POST",
     pathParams: GameIdParams,
     path: "/games/:gameId/start",
-    body: z.object({}),
+    body: z.object({ seed: z.string().optional() }),
     responses: {
       200: z.object({ game: GameApi }),
     },

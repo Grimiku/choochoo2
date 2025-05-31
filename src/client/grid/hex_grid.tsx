@@ -30,7 +30,7 @@ import { Rotate } from "../components/rotation";
 import { SwedenProgressionGraphic } from "../game/sweden/progression_graphic";
 import { useTypedCallback } from "../utils/hooks";
 import { ClickTarget } from "./click_target";
-import { GoodsOnHex, LowerTerrainHex, TrackHex, UpperTerrainHex } from "./hex";
+import { getTerrainHexes } from "./hex";
 import {
   fabs,
   floatingFabs,
@@ -40,10 +40,12 @@ import {
 import { InterCityConnectionRender } from "./inter_city_connection";
 
 interface HexGridProps {
+  id?: string;
   grid: Grid;
   rotation?: Rotation;
   onClick?: (space: Space, good?: Good) => void;
   onClickInterCity?: (connects: Coordinates[]) => void;
+  highlightedSpaces?: Set<Coordinates>;
   highlightedTrack?: Track[];
   highlightedConnections?: OwnedInterCityConnection[];
   selectedGood?: { good: Good; coordinates: Coordinates };
@@ -88,10 +90,12 @@ function useZoom(allowZoom?: boolean) {
 }
 
 export function HexGrid({
+  id,
   onClick,
   onClickInterCity,
   rotation,
   fullMapVersion,
+  highlightedSpaces,
   highlightedTrack,
   highlightedConnections,
   selectedGood,
@@ -128,11 +132,15 @@ export function HexGrid({
   );
 
   // There should be the same number of spaces, so useMemo should be safe here.
-  const lowerTerrainSpaces = [];
-  const upperTerrainSpaces = [];
-  const trackSpaces = [];
-  const goodsSpaces = [];
+  const terrainHexes = {
+    beforeTextures: [] as ReactNode[][],
+    afterTextures: [] as ReactNode[][],
+  };
   for (const space of spaces) {
+    const isHighlighted = useMemo(
+      () => highlightedSpaces?.has(space.coordinates) ?? false,
+      [highlightedSpaces],
+    );
     const highlightedTrackInSpace = useMemo(
       () =>
         highlightedTrack?.filter((track) =>
@@ -146,80 +154,41 @@ export function HexGrid({
           `${track.coordinates.serialize()}|${track.getExits().join(":")}`,
       )
       .join("?");
-    lowerTerrainSpaces.push(
-      useMemo(
-        () => (
-          <LowerTerrainHex
-            key={space.coordinates.serialize()}
-            space={space}
-            size={size}
-            clickTargets={clickTargetsNormalized}
-            rotation={rotation}
-          />
-        ),
-        [
-          grid.topLeft,
-          grid.bottomRight,
+    const newTerrainHexes = useMemo(
+      () =>
+        getTerrainHexes({
+          isHighlighted,
           space,
           size,
-          clickTargetsNormalized,
+          clickTargets: clickTargetsNormalized,
+          highlightedTrack: highlightedTrackInSpace,
           rotation,
-        ],
-      ),
+          selectedGood,
+        }),
+      [
+        isHighlighted,
+        grid.topLeft,
+        grid.bottomRight,
+        space,
+        size,
+        clickTargetsNormalized,
+        rotation,
+        highlightedTrackSerialized,
+        selectedGood,
+      ],
     );
 
-    upperTerrainSpaces.push(
-      useMemo(
-        () => (
-          <UpperTerrainHex
-            key={space.coordinates.serialize()}
-            space={space}
-            size={size}
-            clickTargets={clickTargetsNormalized}
-            rotation={rotation}
-          />
-        ),
-        [
-          grid.topLeft,
-          grid.bottomRight,
-          space,
-          size,
-          clickTargetsNormalized,
-          rotation,
-        ],
-      ),
-    );
+    aggregate(terrainHexes.beforeTextures, newTerrainHexes.beforeTextures);
+    aggregate(terrainHexes.afterTextures, newTerrainHexes.afterTextures);
 
-    trackSpaces.push(
-      useMemo(
-        () => (
-          <TrackHex
-            key={space.coordinates.serialize()}
-            space={space}
-            size={size}
-            highlightedTrack={highlightedTrackInSpace}
-            rotation={rotation}
-          />
-        ),
-        [space, size, highlightedTrackSerialized, rotation],
-      ),
-    );
-
-    goodsSpaces.push(
-      useMemo(
-        () => (
-          <GoodsOnHex
-            key={space.coordinates.serialize()}
-            space={space}
-            selectedGood={selectedGood}
-            size={size}
-            clickTargets={clickTargetsNormalized}
-            rotation={rotation}
-          />
-        ),
-        [space, selectedGood, size, clickTargetsNormalized, rotation],
-      ),
-    );
+    function aggregate<T>(outputArr: T[][], inputArr: T[]) {
+      for (const [index, space] of inputArr.entries()) {
+        if (outputArr[index] == null) {
+          outputArr[index] = [];
+        }
+        outputArr[index].push(space);
+      }
+    }
   }
 
   let texturesLayer: ReactNode = null;
@@ -298,6 +267,7 @@ export function HexGrid({
       )}
       <div className={hexGridContainer}>
         <svg
+          data-hex-grid={id}
           xmlns="http://www.w3.org/2000/svg"
           fill="currentColor"
           className={`bi bi-google ${hexGrid}`}
@@ -325,11 +295,9 @@ export function HexGrid({
           <g ref={ref}>
             {/* Rotating without a center moves it along the origin, but we rely on the viewBox calculation to make sure the view box fits the content. */}
             <Rotate rotation={rotation}>
-              {lowerTerrainSpaces}
+              {terrainHexes.beforeTextures}
               {texturesLayer}
-              {trackSpaces}
-              {upperTerrainSpaces}
-              {goodsSpaces}
+              {terrainHexes.afterTextures}
               {grid.connections.map((connection, index) => (
                 <InterCityConnectionRender
                   key={index}
