@@ -136,7 +136,7 @@ export function town(townName: string): LandData {
 
 export function interCityConnections(
   grid: GridData,
-  connections: string[][],
+  connections: Array<[string, string, number?]>,
 ): InterCityConnection[] {
   const cities = new Map(
     [...grid.entries()].map(([coordinates, space]) => {
@@ -144,9 +144,20 @@ export function interCityConnections(
       return [name, coordinates];
     }),
   );
-  return connections.map((connects) => ({
-    connects: connects.map((name) => cities.get(name)!),
-    cost: 2,
-    owner: undefined,
-  }));
+  return connections.map((connects): InterCityConnection => {
+    const left = cities.get(connects[0]);
+    const right = cities.get(connects[1]);
+    let cost: number;
+    if (connects.length >= 3 && connects[2] !== undefined) {
+      cost = connects[2];
+    } else {
+      cost = 2;
+    }
+
+    return {
+      connects: [left!, right!],
+      cost: cost,
+      owner: undefined,
+    };
+  });
 }
