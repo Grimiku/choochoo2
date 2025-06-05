@@ -1,5 +1,4 @@
 import { SpaceData, CityData } from "../../engine/state/space";
-import { SpaceType } from "../../engine/state/location_type";
 import { BLUE, RED, YELLOW, PURPLE } from "../../engine/state/good";
 import { Direction } from "../../engine/state/tile";
 import { duplicate } from "../../utils/functions";
@@ -14,24 +13,8 @@ import {
   UNPASSABLE,
   white,
 } from "../factory";
+import { RUSSIA, SWEDEN } from "./russia_sweden"
 
-const RUSSIA: CityData = {
-  type: SpaceType.CITY,
-  color: [],
-  name: "Russia",
-  goods: [],
-  onRoll: [],
-  startingNumCubes: 0,
-};
-
-const SWEDEN: CityData = {
-  type: SpaceType.CITY,
-  color: [],
-  name: "Sweden",
-  goods: [],
-  onRoll: [],
-  startingNumCubes: 0,
-};
 
 export const map = grid<SpaceData>([
     [...duplicate(16, WATER)],

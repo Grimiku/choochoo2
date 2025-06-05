@@ -1,18 +1,22 @@
-import { GameStarter } from "../../engine/game/starter";
-import { GoodsGrowthPhase } from "../../engine/goods_growth/phase";
 import { allGoods, Good } from "../../engine/state/good";
 import { CityData } from "../../engine/state/space";
+import { SpaceType } from "../../engine/state/location_type";
 
-export class FinlandStarter extends GameStarter {
-  protected getPlacedGoodsFor(
-    bag: Good[],
-    playerCount: number,
-    location: CityData,
-  ): Good[] {
-    if (location.name === "Russia" || location.name === "Sweden") {
-      return super.getPlacedGoodsFor(bag, playerCount, location);
-    }
+export const RUSSIA: CityData = {
+  type: SpaceType.CITY,
+  color: [],
+  name: "Russia",
+  goods: [],
+  onRoll: [],
+  startingNumCubes: 5,
+};
 
-    return [...allGoods];
-  }
-}
+export const SWEDEN: CityData = {
+  type: SpaceType.CITY,
+  color: [],
+  name: "Sweden",
+  goods: [],
+  onRoll: [],
+  startingNumCubes: 0,
+};
+
