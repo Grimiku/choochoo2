@@ -1,11 +1,11 @@
 import { useMemo } from "react";
+import { Button, CardGroup } from "semantic-ui-react";
 import { GameLiteApi, GameStatus, ListGamesApi } from "../../api/game";
 import { partition } from "../../utils/functions";
 import { useGameList } from "../services/game";
 import { useMe } from "../services/me";
 import { GameCard } from "./game_card";
 import * as styles from "./game_list.module.css";
-import { Button, CardGroup } from "semantic-ui-react";
 
 interface GameListProps {
   query: ListGamesApi;

@@ -1,12 +1,17 @@
 import { By } from "selenium-webdriver";
+import { setTestTimeout } from "../e2e/util/timeout";
 import { setUpWebDriver } from "../e2e/util/webdriver";
-import { environment } from "../server/util/environment";
+import { loginBypass } from "../server/util/environment";
 
 describe("prober test", () => {
-  const driver = setUpWebDriver("https://www.choochoo.games");
+  setTestTimeout(60000);
+  const driver = setUpWebDriver(
+    "https://www.choochoo.games",
+    "https://api.choochoo.games",
+  );
 
   it("site is live", async () => {
-    await driver.goHome(environment.loginIds[0]);
+    await driver.goHome(loginBypass().loginIds[0]);
 
     await driver.waitForElement(By.xpath("//*[@data-game-card]"));
   });

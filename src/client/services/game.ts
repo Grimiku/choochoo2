@@ -118,7 +118,7 @@ export function useGameList(baseQuery: ListGamesApi) {
         const pageParams = newPages
           .map((_, index) => {
             return newPages
-              .slice(index)
+              .slice(0, index)
               .flatMap((games) => games.map(({ id }) => id));
           })
           .map(pageCursorToString);
@@ -126,10 +126,17 @@ export function useGameList(baseQuery: ListGamesApi) {
         // TODO: fix the typing of this particular method.
         return {
           pageParams,
-          pages: newPages.map((games) => ({
+          pages: newPages.map((games, index) => ({
             status: 200,
             headers: new Headers(),
-            body: { games },
+            body: {
+              games,
+              nextPageCursor: pageCursorToString(
+                newPages
+                  .slice(0, index + 1)
+                  .flatMap((games) => games.map((g) => g.id)),
+              ),
+            },
           })),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
