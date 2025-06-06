@@ -13,7 +13,7 @@ import {
   UNPASSABLE,
   white,
 } from "../factory";
-import { RUSSIA, SWEDEN } from "./russia_sweden"
+import { RUSSIA, SWEDEN, SWEDEN_TEMP } from "./russia_sweden"
 
 
 export const map = grid<SpaceData>([
@@ -71,7 +71,7 @@ export const map = grid<SpaceData>([
       WATER,
     ],
     [
-      UNPASSABLE,  
+      SWEDEN_TEMP,  
       PLAIN,
       WATER,
       ...duplicate(7, PLAIN),
