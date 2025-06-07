@@ -6,7 +6,8 @@ import { PlayerColor } from "../../engine/state/player";
 import { 
   FinlandMovePhase, 
   FinlandSelectAction, 
-  FinlandStarter 
+  FinlandStarter,
+  FinlandBuildAction,
 } from "./russia_sweden"
 
 export class FinlandMapSettings implements MapSettings {
@@ -26,7 +27,7 @@ export class FinlandMapSettings implements MapSettings {
       FinlandStarter,
       FinlandMovePhase,
       FinlandSelectAction,
-
+      FinlandBuildAction,
     ];
   }
 }

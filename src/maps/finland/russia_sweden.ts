@@ -10,6 +10,12 @@ import { SelectAction } from "../../engine/select_action/select";
 import { inject, injectState } from "../../engine/framework/execution_context";
 import { Key } from "../../engine/framework/key";
 import { GameStarter } from "../../engine/game/starter";
+import { BuildAction, BuildData } from "../../engine/build/build";
+import { assert } from "../../utils/validate";
+import { Land } from "../../engine/map/location";
+import { Track } from "../../engine/map/track";
+import { Direction, TileData, TOP_LEFT, TOP_RIGHT, TOP, TownTileType, BOTTOM } from "../../engine/state/tile";
+import { Coordinates } from "../../utils/coordinates";
 
 export const RUSSIA: CityData = {
   type: SpaceType.CITY,
@@ -93,5 +99,41 @@ function unlockSweden( grid: GridHelper ): void {
   grid.update(swedenTemp.coordinates, (cityData) => {
     cityData.goods = [];
   });
+}
+
+export class FinlandBuildAction extends BuildAction {
+  validate(data: BuildData): void {
+    super.validate(data);
+    const toSweden = Coordinates.from({q: 5, r :5});
+    const toRussia = Coordinates.from({q: 11, r :14});
+    
+    if (data.coordinates === toSweden) {
+      const bottomRight = this.grid().get(data.coordinates.neighbor(Direction.BOTTOM_RIGHT)) as Land;
+      const trackConnects = bottomRight.trackExiting(TOP_LEFT);
+      assert(!(trackConnects === undefined), {
+        invalidInput:
+          "Can only build towards Sweden, not from Sweden.",
+      })
+    }
+
+    if (data.coordinates === toRussia) {
+      const bottomLeft = this.grid().get(data.coordinates.neighbor(Direction.BOTTOM_LEFT)) as Land;
+      const trackConnectsBL = bottomLeft.trackExiting(TOP_RIGHT);
+      const top = this.grid().get(data.coordinates.neighbor(Direction.TOP)) as Land;
+      const trackConnectsTop = top.trackExiting(BOTTOM);
+
+      if(trackConnectsBL === undefined && trackConnectsTop === undefined){
+        assert(data.orientation === 1, {
+          invalidInput: "Can only build towards Russia, not from Russia."
+        })
+      }
+
+      if(trackConnectsBL && trackConnectsTop === undefined){
+        assert(data.orientation === 1 || data.orientation === 6, {
+          invalidInput: "Can only build towards Russia, not from Russia.",
+        });
+      }
+    }
+  }
 }
 
