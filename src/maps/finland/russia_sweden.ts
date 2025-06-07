@@ -1,3 +1,4 @@
+import z from "zod";
 import { allGoods  } from "../../engine/state/good";
 import { CityData } from "../../engine/state/space";
 import { SpaceType } from "../../engine/state/location_type";
@@ -6,7 +7,9 @@ import { injectCurrentPlayer } from "../../engine/game/state";
 import { GoodsHelper } from "../../engine/goods_growth/helper";
 import { GridHelper } from "../../engine/map/grid_helper";
 import { SelectAction } from "../../engine/select_action/select";
-import { inject } from "../../engine/framework/execution_context";
+import { inject, injectState } from "../../engine/framework/execution_context";
+import { Key } from "../../engine/framework/key";
+import { GameStarter } from "../../engine/game/starter";
 
 export const RUSSIA: CityData = {
   type: SpaceType.CITY,
@@ -35,17 +38,27 @@ export const SWEDEN_TEMP: CityData = {
   startingNumCubes: 5,
 };
 
-let FOUR_LOCO_FLAG = false;
+const FOUR_LOCO_FLAG = new Key("fourLocoFlag", { parse: z.boolean().parse });
+
+export class FinlandStarter extends GameStarter {
+  private readonly fourLoco = injectState(FOUR_LOCO_FLAG);
+
+  onStartGame() {
+    super.onStartGame();
+    this.fourLoco.initState(false);
+  }
+}
 
 export class FinlandMovePhase extends MovePhase {
   protected readonly currentPlayer = injectCurrentPlayer();
   protected readonly helper = inject(GoodsHelper);
   protected readonly grid = inject(GridHelper);
+  private readonly fourLoco = injectState(FOUR_LOCO_FLAG);
 
   onEndTurn(): void {
     super.onEndTurn();
-    if (this.currentPlayer().locomotive === 4 && !FOUR_LOCO_FLAG){
-      FOUR_LOCO_FLAG = true;
+    if (this.currentPlayer().locomotive === 4 && !this.fourLoco()){
+      this.fourLoco.set(true);
       unlockSweden(this.grid);
     }
   }
@@ -54,11 +67,12 @@ export class FinlandMovePhase extends MovePhase {
 export class FinlandSelectAction extends SelectAction {
   protected readonly currentPlayer = injectCurrentPlayer();
   protected readonly grid = inject(GridHelper);
+  private readonly fourLoco = injectState(FOUR_LOCO_FLAG);
 
   protected override applyLocomotive(): void {
     super.applyLocomotive();
-    if (this.currentPlayer().locomotive === 4 && !FOUR_LOCO_FLAG){
-      FOUR_LOCO_FLAG = true;
+    if (this.currentPlayer().locomotive === 4 && !this.fourLoco()){
+      this.fourLoco.set(true);
       unlockSweden(this.grid);
     }
   }
