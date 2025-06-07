@@ -1,4 +1,6 @@
 import { FinlandViewSettings } from "./finland/view_settings";
+import { PortugalViewSettings } from "./portugal/view_settings";
+import { AustraliaViewSettings } from "./australia/view_settings";
 import { DCMetroViewSettings } from "./d_c_metro/view_settings";
 import { GameKey } from "../api/game_key";
 import { assert } from "../utils/validate";
@@ -34,6 +36,8 @@ export class ViewRegistry {
 
   private constructor() {
     this.add(new FinlandViewSettings());
+    this.add(new PortugalViewSettings());
+    this.add(new AustraliaViewSettings());
     this.add(new ScotlandViewSettings());
     this.add(new DCMetroViewSettings());
     this.add(new ScandinaviaViewSettings());

@@ -1,4 +1,6 @@
 import { FinlandMapSettings } from "./finland/settings";
+import { PortugalMapSettings } from "./portugal/settings";
+import { AustraliaMapSettings } from "./australia/settings";
 import { GameKey } from "../api/game_key";
 import { MapSettings } from "../engine/game/map_settings";
 import { assert } from "../utils/validate";
@@ -34,6 +36,8 @@ export class MapRegistry {
 
   private constructor() {
     this.add(new FinlandMapSettings());
+    this.add(new PortugalMapSettings());
+    this.add(new AustraliaMapSettings());
     this.add(new DCMetroMapSettings());
     this.add(new ScandinaviaMapSettings());
     this.add(new NewEnglandMapSettings());

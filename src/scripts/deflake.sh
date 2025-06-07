@@ -1,4 +1,5 @@
 # This script takes in a command and a number of runs, and runs the command N times. It only reports a failure if all runs fail.
+set -e
 
 COMMAND="$1"
 RUNS="${2:-3}"
@@ -17,6 +18,8 @@ for i in $(seq 1 $RUNS); do
   echo ""
 done
 
-if (( "$failures" >= "$RUNS" )); then
+if [ "$failures" -lt "$RUNS" ]; then
+  exit 0;
+else
   exit 1;
 fi

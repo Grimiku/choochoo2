@@ -5,34 +5,48 @@ import { Redis } from "ioredis";
 import { logError } from "../utils/functions";
 import { redisUrl, sessionSecret } from "./util/environment";
 
-export const redisClient = new Redis({
-  host: redisUrl().hostname,
-  port: Number(redisUrl().port),
-  username: redisUrl().username,
-  password: redisUrl().password,
-});
-export const subClient = redisClient.duplicate();
+export let redisClient: Redis | undefined;
+export let subClient: Redis | undefined;
 
-redisClient.on("error", (e) => {
-  logError("redis connection error", e);
-  process.exit();
-});
+function redisStore() {
+  const url = redisUrl();
+  if (url == null) return;
 
-const redisPrefix = redisUrl().pathname.slice(1);
+  redisClient = new Redis({
+    host: url.hostname,
+    port: Number(url.port),
+    username: url.username,
+    password: url.password,
+  });
+  subClient = redisClient.duplicate();
 
-const redisStore = new RedisStore({
-  client: redisClient,
-  prefix: `${redisPrefix == "" ? "choo" : redisPrefix}:`,
-});
+  redisClient.on("error", (e) => {
+    logError("redis connection error", e);
+    process.exit();
+  });
 
-export const redisSession = express();
+  const redisPrefix = url.pathname.slice(1);
 
-const sessionParser = session({
-  store: redisStore,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
-  secret: sessionSecret(),
-});
+  const redisStore = new RedisStore({
+    client: redisClient,
+    prefix: `${redisPrefix == "" ? "choo" : redisPrefix}:`,
+  });
 
-redisSession.use(sessionParser);
+  return redisStore;
+}
+
+export function redisApp() {
+  const redisApp = express();
+
+  const sessionParser = session({
+    store: redisStore(),
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+    secret: sessionSecret(),
+  });
+
+  redisApp.use(sessionParser);
+
+  return redisApp;
+}

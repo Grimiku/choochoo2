@@ -19,19 +19,31 @@ jobs:
       checks: write
 
     services:
-      postgrestestdb:
-        image: postgres
+      postgres:
+        image: postgres:latest
         env:
-          POSTGRES_PASSWORD: postgrespass
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
 
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+
+      - run: apt-get update
+
+      - run: apt-get install -y postgresql-client
+      - run: PGPASSWORD=postgres psql -d postgres -U postgres -p "${{ job.services.postgres.ports[5432] }}" -c 'SELECT 1;'
+
+      - run: apt-get install unzip
 
       - name: Set up Node.js
         uses: actions/setup-node@v1
@@ -45,15 +57,28 @@ jobs:
       - name: Running tests
         run: npm test
 
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          install-chromedriver: true
+          install-dependencies: true
+          chrome-version: latest
+
       - run: npm run build
-      - run: npm run migrate-testdb
+      - run: npm run migrate-testdb-direct
         env:
-          POSTGRES_URL: "postgres://postgres:postgrespass@postgrestestdb:5432/postgres"
+          POSTGRES_URL: "postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres"
+          NODE_ENV: "test"
 
       - name: Run e2e tests
-        run: ./src/scripts/deflake.sh \"npm run e2e-test\"
+        run: ./src/scripts/deflake.sh "npm run e2e-test"
         env:
           # User, port, and db seem to be hardcoded
-          POSTGRES_URL: "postgres://postgres:postgrespass@postgrestestdb:5432/postgres"
+          POSTGRES_URL: "postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres"
           NODE_ENV: "test"
           PORT: 3001
