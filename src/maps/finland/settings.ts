@@ -8,6 +8,7 @@ import {
   FinlandSelectAction, 
   FinlandStarter,
   FinlandBuildAction,
+  FinlandMoveAction
 } from "./russia_sweden"
 
 export class FinlandMapSettings implements MapSettings {
@@ -28,6 +29,7 @@ export class FinlandMapSettings implements MapSettings {
       FinlandMovePhase,
       FinlandSelectAction,
       FinlandBuildAction,
+      FinlandMoveAction,
     ];
   }
 }
