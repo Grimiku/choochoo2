@@ -9,7 +9,12 @@ import { Action } from "../../engine/state/action";
 import { AvailableActionsModule } from "../../modules/available_actions";
 import { ClaimRequiresUrbanizeModule } from "../../modules/claim_requires_urbanize";
 import { TurnLengthModule } from "../../modules/turn_length";
-import { ScandinaviaMoveHelper, ScandinaviaMoveValidator } from "./ferry";
+import {
+  ScandinaviaMoveAction,
+  ScandinaviaMoveHelper,
+  ScandinaviaMovePhase,
+  ScandinaviaMoveValidator,
+} from "./ferry";
 import { map } from "./grid";
 
 export class ScandinaviaMapSettings implements MapSettings {
@@ -22,7 +27,12 @@ export class ScandinaviaMapSettings implements MapSettings {
   readonly rotation = Rotation.CLOCKWISE;
 
   getOverrides() {
-    return [ScandinaviaMoveValidator, ScandinaviaMoveHelper];
+    return [
+      ScandinaviaMoveValidator,
+      ScandinaviaMoveHelper,
+      ScandinaviaMoveAction,
+      ScandinaviaMovePhase,
+    ];
   }
 
   getModules(): Array<Module> {

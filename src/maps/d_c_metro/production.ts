@@ -41,14 +41,12 @@ export class DCSelectActionPhase extends SelectActionPhase {
   }
 }
 
-export const PlaceWhiteCubeData = z.object({
+const PlaceWhiteCubeData = z.object({
   coordinates: CoordinatesZod,
 });
-export type PlaceWhiteCubeData = z.infer<typeof PlaceWhiteCubeData>;
+type PlaceWhiteCubeData = z.infer<typeof PlaceWhiteCubeData>;
 
-export class PlaceWhiteCubeAction
-  implements ActionProcessor<PlaceWhiteCubeData>
-{
+class PlaceWhiteCubeAction implements ActionProcessor<PlaceWhiteCubeData> {
   static readonly action = "place-white-cube";
   private readonly gridHelper = inject(GridHelper);
   private readonly whiteCubesRemaining = injectState(WHITE_CUBES_REMAINING);
