@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  Button,
+  Checkbox,
+  Modal,
+  ModalContent,
+  ModalHeader,
+} from "semantic-ui-react";
 import { BuildAction, BuildData } from "../../engine/build/build";
 import { UrbanizeAction } from "../../engine/build/urbanize";
+import { Validator } from "../../engine/build/validator";
 import { AVAILABLE_CITIES } from "../../engine/game/state";
 import { City } from "../../engine/map/city";
 import { rotateDirectionClockwise } from "../../engine/map/direction";
@@ -29,7 +37,9 @@ import { Coordinates } from "../../utils/coordinates";
 import { useAction } from "../services/action";
 import { useTypedMemo } from "../utils/hooks";
 import {
+  Memoized,
   useInjected,
+  useInjectedMemo,
   useInjectedState,
   usePhaseState,
 } from "../utils/injection_context";
@@ -40,13 +50,6 @@ import {
 } from "./building_dialog.module.css";
 import { ClickTarget } from "./click_target";
 import { HexGrid } from "./hex_grid";
-import {
-  Button,
-  Checkbox,
-  Modal,
-  ModalContent,
-  ModalHeader,
-} from "semantic-ui-react";
 
 interface BuildingProps {
   cancelBuild(): void;
@@ -62,7 +65,8 @@ export function BuildingDialog({
   const { emit: emitBuild } = useAction(BuildAction);
   const { emit: emitUrbanize, canEmit: canEmitUrbanize } =
     useAction(UrbanizeAction);
-  const action = useInjected(BuildAction);
+  const action = useInjectedMemo(BuildAction);
+  const buildValidator = useInjectedMemo(Validator);
   const availableCities = useInjectedState(AVAILABLE_CITIES);
   const grid = useInjected(GridHelper);
   const [showReasons, setShowReasons] = useState(false);
@@ -71,8 +75,9 @@ export function BuildingDialog({
     Direction.TOP,
   );
   const space = coordinates && (grid.lookup(coordinates) as Land);
-  const eligible = useTypedMemo(getEligibleBuilds, [
+  const { eligible, errorReason } = useTypedMemo(getEligibleBuilds, [
     action,
+    buildValidator,
     coordinates,
     direction,
     showReasons,
@@ -105,7 +110,7 @@ export function BuildingDialog({
   useEffect(() => {
     if (coordinates != null && !hasBuildingOptions) {
       cancelBuild();
-      toast.error("No eligible building options");
+      toast.error(errorReason ?? "No eligible building options");
     }
   }, [coordinates, hasBuildingOptions, cancelBuild]);
 
@@ -283,20 +288,24 @@ interface EligibleBuild {
 }
 
 function getEligibleBuilds(
-  actionProcessor: BuildAction,
+  actionProcessor: Memoized<BuildAction>,
+  buildValidator: Memoized<Validator>,
   coordinates: Coordinates | undefined,
   direction: Direction,
   showReasons: boolean,
-): EligibleBuild[] {
-  if (coordinates == null) return [];
+): { eligible: EligibleBuild[]; errorReason?: string } {
+  if (coordinates == null) {
+    return { eligible: [], errorReason: "Invalid tile placement" };
+  }
   const builds = [
     ...getAllEligibleBuilds(
-      actionProcessor,
+      actionProcessor.value,
+      buildValidator.value,
       coordinates,
       showReasons ? [direction] : allDirections,
     ),
-  ].filter(({ reason }) => showReasons || reason == null);
-  return builds.filter((build1, index) => {
+  ];
+  const filteredDuplicates = builds.filter((build1, index) => {
     const tileInfo1 = calculateTrackInfo(build1.tile);
     return !builds.slice(index + 1).some((build2) => {
       const tileInfo2 = calculateTrackInfo(build2.tile);
@@ -308,14 +317,29 @@ function getEligibleBuilds(
       );
     });
   });
+  const eligible = filteredDuplicates.filter(
+    ({ reason }) => showReasons || reason == null,
+  );
+  if (eligible.length > 0) {
+    return { eligible };
+  }
+  const errorReason = filteredDuplicates[0].reason!;
+  if (filteredDuplicates.every(({ reason }) => reason === errorReason)) {
+    return { eligible, errorReason };
+  }
+  return { eligible };
 }
 
 function* getAllEligibleBuilds(
   actionProcessor: BuildAction,
+  validator: Validator,
   coordinates: Coordinates,
   directions: Direction[],
 ): Iterable<EligibleBuild> {
   for (const tileType of allTileTypes) {
+    if (validator.tileMatchesTownType(coordinates, tileType) != null) {
+      continue;
+    }
     for (const orientation of directions) {
       const action = { orientation, tileType, coordinates };
       const tile = { orientation, tileType, owners: [] };

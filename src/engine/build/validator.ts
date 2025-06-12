@@ -26,6 +26,18 @@ export class Validator {
   private readonly helper = inject(BuilderHelper);
   private readonly grid = injectGrid();
 
+  tileMatchesTownType(coordinates: Coordinates, tileType: TileType) {
+    const space = this.grid().get(coordinates) as Land;
+    const thisIsTownTile = isTownTile(tileType);
+    if (space.hasTown() !== thisIsTownTile) {
+      if (thisIsTownTile) {
+        return 'cannot place town track on a non-town tile';
+      }
+      return 'cannot place regular track on a town tile';
+    }
+  }
+
+  /** Returns the invalid build reason. The order matters here, because we can show a specific error if every single build option returns that error. */
   getInvalidBuildReason(coordinates: Coordinates, buildData: BuildInfo): InvalidBuildReason | undefined {
     const grid = this.grid();
     const space = grid.get(coordinates);
@@ -36,21 +48,28 @@ export class Validator {
       return 'cannot build on unpassable terrain';
     }
 
-    if (!this.helper.tileAvailableInManifest(buildData.tileType)) {
-      return 'tile unavailable';
-    }
-
-    const thisIsTownTile = isTownTile(buildData.tileType);
-    if (space.hasTown() !== thisIsTownTile) {
-      if (thisIsTownTile) {
-        return 'cannot place town track on a non-town tile';
-      }
-      return 'cannot place regular track on a town tile';
-    }
-
     const newTileData = calculateTrackInfo(buildData);
 
     const { preserved, rerouted, newTracks } = this.partitionTracks(space, newTileData);
+
+    // Don't validate unmodified track because those are owned by other players.
+    const trackToValidate = newTracks.concat(rerouted);
+
+    if (!this.newTrackExtendsPrevious(buildData.playerColor, space, trackToValidate)) {
+      return 'new track must come off a city or extend previous track';
+    }
+
+    if (!this.helper.tileAvailableInManifest(buildData.tileType)) {
+      return 'tile unavailable';
+    }
+    
+
+    const townTileError = this.tileMatchesTownType(space.coordinates, buildData.tileType);
+    if (townTileError != null) {
+      return townTileError;
+    }
+
+    const thisIsTownTile = isTownTile(buildData.tileType);
 
     if (thisIsTownTile && rerouted.length > 0) {
       return 'cannot reroute track on a town tile';
@@ -85,13 +104,6 @@ export class Validator {
     // Look to see if any track was removed
     if (preserved.length + rerouted.length !== space.getTrack().length) {
       return 'must preserve previous track';
-    }
-
-    // Don't validate unmodified track because those are owned by other players.
-    const trackToValidate = newTracks.concat(rerouted);
-
-    if (!this.newTrackExtendsPrevious(buildData.playerColor, space, trackToValidate)) {
-      return 'new track must come off a city or extend previous track';
     }
 
     if (this.newTrackConnectsToAnotherPlayer(buildData.playerColor, space, trackToValidate)) {

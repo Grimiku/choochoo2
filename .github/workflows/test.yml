@@ -12,7 +12,7 @@ jobs:
   run-tests:
     name: Run tests
     runs-on: ubuntu-latest
-    container: node:20-bookworm-slim
+    # container: node:20-bookworm-slim
 
     permissions:
       contents: read
@@ -38,12 +38,8 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - run: apt-get update
-
-      - run: apt-get install -y postgresql-client
-      - run: PGPASSWORD=postgres psql -d postgres -U postgres -p "${{ job.services.postgres.ports[5432] }}" -c 'SELECT 1;'
-
-      - run: apt-get install unzip
+      - run: sudo apt-get update
+      - run: sudo apt-get install unzip
 
       - name: Set up Node.js
         uses: actions/setup-node@v1
@@ -63,11 +59,11 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: browser-actions/setup-chrome@v1
-        with:
-          install-chromedriver: true
-          install-dependencies: true
-          chrome-version: latest
+      # - uses: browser-actions/setup-chrome@v1
+      #   with:
+      #     install-chromedriver: true
+      #     install-dependencies: true
+      #     chrome-version: 139
 
       - run: npm run build
       - run: npm run migrate-testdb-direct

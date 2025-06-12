@@ -44,7 +44,7 @@ export class MoveValidator {
     const grid = this.grid();
     if (!this.moveHelper.isWithinLocomotive(player, action)) {
       throw new InvalidInputError(
-        `Can only move ${this.moveHelper.getLocomotiveDisplay(player)} steps`,
+        `Your loco only allows ${this.moveHelper.getLocomotiveDisplay(player)} steps`,
       );
     }
 
@@ -127,10 +127,15 @@ export class MoveValidator {
     toCoordinates: Coordinates,
   ): RouteInfo[] {
     const space = this.grid().get(fromCoordinates);
+    const toSpace = this.grid().get(toCoordinates);
     assert(space != null, "cannot call findRoutes from null location");
-    return this.findRoutesFromLocation(fromCoordinates).filter((route) =>
-      route.destination.equals(toCoordinates),
-    );
+    return this.findRoutesFromLocation(fromCoordinates).filter((route) => {
+      if (toSpace instanceof City) {
+        return toSpace.isSameCity(this.grid().get(route.destination));
+      } else {
+        return toCoordinates === route.destination;
+      }
+    });
   }
 
   findRoutesFromLocation(fromCoordinates: Coordinates): RouteInfo[] {
