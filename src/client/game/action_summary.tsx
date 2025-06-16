@@ -47,6 +47,8 @@ import {
   FormGroup,
   FormField,
 } from "semantic-ui-react";
+import { FinlandRemoveCube } from "../../maps/finland/remove_cube";
+import { RSDELIVERY } from "../../maps/finland/russia_sweden";
 
 const PASS_ACTION = "Pass" as const;
 type PassActionString = typeof PASS_ACTION;
@@ -71,7 +73,12 @@ export function ActionSummary() {
     case Phase.BUILDING:
       return <Build />;
     case Phase.MOVING:
-      return <MoveGoods />;
+      return  (
+        <>
+        <MoveGoods />
+        <FinlandCube />
+        </>
+      );
     case Phase.END_GAME:
       return <EndGame />;
     case Phase.DEURBANIZATION:
@@ -272,10 +279,14 @@ function MoveGoods() {
   } = useEmptyAction(LocoAction);
   const { emit: emitPass } = useEmptyAction(MovePassAction);
   const viewSettings = useViewSettings();
+  const rsDelivery = useInject(() => {
+    const state = injectState(RSDELIVERY);
+    return state.isInitialized() ? state() : undefined;
+  }, []);
 
   const message = viewSettings.moveGoodsMessage?.();
 
-  if (canEmitUserId == null) {
+  if (canEmitUserId == null || rsDelivery) {
     return <></>;
   }
 
@@ -590,4 +601,22 @@ function Build() {
       </Button>
     </div>
   );
+}
+
+function FinlandCube() {
+  const { canEmit, canEmitUserId } = useAction(FinlandRemoveCube);
+
+  if (canEmitUserId == null) {
+    return <></>;
+  }
+
+  if (!canEmit) {
+    return (
+      <GenericMessage>
+        <Username userId={canEmitUserId} /> must select a cube to remove from previous destination.
+      </GenericMessage>
+    );
+  }
+
+  return <div> You must select a cube to remove from previous destination.</div>;
 }

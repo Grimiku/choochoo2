@@ -7,9 +7,9 @@ import {
   FinlandMovePhase, 
   FinlandSelectAction, 
   FinlandStarter,
-  FinlandBuildAction,
-  FinlandMoveAction
+  FinlandBuildAction
 } from "./russia_sweden"
+import { FinlandMoveAction } from "./remove_cube";
 
 export class FinlandMapSettings implements MapSettings {
   readonly key = GameKey.FINLAND;

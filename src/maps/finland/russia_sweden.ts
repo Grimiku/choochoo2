@@ -2,6 +2,7 @@ import z from "zod";
 import { allGoods } from "../../engine/state/good";
 import { CityData, LandData } from "../../engine/state/space";
 import { SpaceType } from "../../engine/state/location_type";
+import { PlayerColor } from "../../engine/state/player";
 import { MovePhase } from "../../engine/move/phase";
 import { injectCurrentPlayer } from "../../engine/game/state";
 import { GoodsHelper } from "../../engine/goods_growth/helper";
@@ -13,10 +14,9 @@ import { GameStarter } from "../../engine/game/starter";
 import { BuildAction, BuildData } from "../../engine/build/build";
 import { assert } from "../../utils/validate";
 import { Land } from "../../engine/map/location";
-import { Direction, TOP_LEFT, TOP_RIGHT, BOTTOM } from "../../engine/state/tile";
-import { Coordinates } from "../../utils/coordinates";
-import { MoveAction, MoveData } from "../../engine/move/move";
-import { City } from "../../engine/map/city";
+import { Direction, TOP_LEFT, TOP_RIGHT, BOTTOM} from "../../engine/state/tile";
+import { Coordinates, CoordinatesZod } from "../../utils/coordinates";
+import { FinlandRemoveCube } from "./remove_cube";
 
 export const RUSSIA: CityData = {
   type: SpaceType.CITY,
@@ -29,7 +29,7 @@ export const RUSSIA: CityData = {
 
 export const SWEDEN: CityData = {
   type: SpaceType.CITY,
-  color: allGoods.toArray(),
+  color: [],
   name: "Sweden",
   goods: [],
   onRoll: [],
@@ -41,14 +41,18 @@ export const SWEDEN_TEMP: LandData = {
 };
 
 const FOUR_LOCO_FLAG = new Key("fourLocoFlag", { parse: z.boolean().parse });
+export const RSDELIVERY = new Key("deliveredRS", { parse: z.boolean().parse });
+export const RSDELIVERY_LOCATION = new Key("lastDeliveryLocation", { parse: CoordinatesZod.parse });
 
 export class FinlandStarter extends GameStarter {
   private readonly fourLoco = injectState(FOUR_LOCO_FLAG);
+  private readonly rsDelivery = injectState(RSDELIVERY);
   protected readonly ghelper = inject(GoodsHelper);
 
   onStartGame() {
     super.onStartGame();
     this.fourLoco.initState(false);
+    this.rsDelivery.initState(false);
     this.placeGoodsOnST();
   }
 
@@ -67,6 +71,12 @@ export class FinlandMovePhase extends MovePhase {
   protected readonly helper = inject(GoodsHelper);
   protected readonly grid = inject(GridHelper);
   private readonly fourLoco = injectState(FOUR_LOCO_FLAG);
+  private readonly rsDelivery = injectState(RSDELIVERY);
+
+  configureActions(): void {
+    super.configureActions();
+    this.installAction(FinlandRemoveCube)
+  }
 
   onEndTurn(): void {
     super.onEndTurn();
@@ -74,6 +84,11 @@ export class FinlandMovePhase extends MovePhase {
       this.fourLoco.set(true);
       unlockSweden(this.grid);
     }
+  }
+
+  findNextPlayer(currPlayer: PlayerColor): PlayerColor | undefined {
+    if (this.rsDelivery() === true) {return currPlayer}
+    return super.findNextPlayer(currPlayer)
   }
 }
 
@@ -84,7 +99,7 @@ export class FinlandSelectAction extends SelectAction {
 
   protected override applyLocomotive(): void {
     super.applyLocomotive();
-    if (this.currentPlayer().locomotive === 2 && !this.fourLoco()){
+    if (this.currentPlayer().locomotive === 4 && !this.fourLoco()){
       this.fourLoco.set(true);
       unlockSweden(this.grid);
     }
@@ -100,10 +115,13 @@ function unlockSweden( grid: GridHelper ): void {
   const initialSwedenGoods = swedenTemp.getGoods();
 
   grid.update(sweden.coordinates, (cityData) => {
+    if (cityData.type === SpaceType.CITY) {
       cityData.goods = initialSwedenGoods;
-    });
+      cityData.color = allGoods.toArray();
+    }
+  });
   grid.update(swedenTemp.coordinates, (landData) => {
-    landData.goods = [];
+    landData.goods = []
   });
 }
 
@@ -129,7 +147,7 @@ export class FinlandBuildAction extends BuildAction {
       const trackConnectsTop = top.trackExiting(BOTTOM);
 
       if(trackConnectsBL === undefined && trackConnectsTop === undefined){
-        assert(data.orientation === 1, {
+        assert(data.tileType === 1, {
           invalidInput: "Can only build towards Russia, not from Russia."
         })
       }
@@ -140,46 +158,6 @@ export class FinlandBuildAction extends BuildAction {
         });
       }
     }
-  }
-}
-
-export class FinlandMoveAction extends MoveAction {
-
-  protected returnToBag(action: MoveData): void {
-    const sweden = Coordinates.from({q: 4, r: 5});
-    const russia = Coordinates.from({q: 12, r: 14});
-    const endingStop = action.path[action.path.length - 1].endingStop;
-
-    super.returnToBag(action);
-
-    if (sweden === endingStop || russia === endingStop){
-      this.removeCubeFromCity(endingStop);
-    }
-
-  }
-
-  removeCubeFromCity(city: Coordinates): void {
-    const finalDestination = this.gridHelper.lookup(city) as City;
-    const currentGoods = finalDestination.getGoods();
-    const goodToRemove = Math.floor(Math.random() * currentGoods.length);
-
-    currentGoods.splice(goodToRemove, 1);
-
-    this.gridHelper.update(finalDestination.coordinates, (cityData) => {
-      cityData.goods = currentGoods;
-    });
-
-    if(finalDestination.getGoods().length === 0){
-      this.disableCity(finalDestination);
-    };
-  }
-
-  disableCity(cityToDisable: City): void {
-    this.gridHelper.update(cityToDisable.coordinates, (cityData) => {
-      if(cityData.type === SpaceType.CITY){
-        cityData.color = [];
-      }
-    })
   }
 }
 

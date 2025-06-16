@@ -55,6 +55,7 @@ import { ClickTarget } from "./click_target";
 import { HexGrid } from "./hex_grid";
 import { EnhancedMoveData, onMoveToSpaceCb } from "./move_good";
 import { InterceptMoveModal, useMoveInterceptionState } from "./move_intercept";
+import { FinlandRemoveCube, FinlandSelectGoodData } from "../../maps/finland/remove_cube";
 
 function onSelectGoodCb(
   moveActionProgress: EnhancedMoveData | undefined,
@@ -165,6 +166,8 @@ function onClickCb(
   setPlaceSpace: (space: Land) => void,
   canEmitRepopulate: boolean,
   emitRepopulate: (data: RepopulateData) => void,
+  canEmitRemoveCube: boolean,
+  emitRemoveCube: (data: FinlandSelectGoodData) => void,
   repopulateGood?: Good,
 ) {
   return (space: Space, good?: Good) => {
@@ -172,6 +175,13 @@ function onClickCb(
     if (canEmitRepopulate && repopulateGood != null) {
       emitRepopulate({
         good: repopulateGood,
+        coordinates: space.coordinates,
+      });
+      return;
+    }
+    if(canEmitRemoveCube && good != null) {
+      emitRemoveCube({
+        good,
         coordinates: space.coordinates,
       });
       return;
@@ -305,6 +315,11 @@ export function GameMap() {
     isPending: isRepopulatePending,
   } = useAction(RepopulateAction);
   const {
+    canEmit: canEmitRemoveCube,
+    emit: emitRemoveCube,
+    isPending: isRemoveCubePending,
+  } = useAction(FinlandRemoveCube);
+  const {
     canEmit: canEmitSelectCity,
     emit: emitSelectCity,
     isPending: isSelectCityPending,
@@ -344,7 +359,8 @@ export function GameMap() {
     isSelectCityPending ||
     isConnectCityPending ||
     isDiscoProductionPending ||
-    isRepopulatePending;
+    isRepopulatePending ||
+    isRemoveCubePending;
 
   const confirm = useConfirm();
 
@@ -417,6 +433,8 @@ export function GameMap() {
     setPlaceSpace,
     canEmitRepopulate,
     emitRepopulate,
+    canEmitRemoveCube,
+    emitRemoveCube,
     repopulateData?.good,
   ]);
 
@@ -439,6 +457,9 @@ export function GameMap() {
     }
     if (canEmitPlaceAction) {
       return new Set([ClickTarget.TOWN]);
+    }
+    if (canEmitRemoveCube) {
+      return new Set([ClickTarget.GOOD]);
     }
     if (canEmitRepopulate && repopulateData?.good != null) {
       return new Set([ClickTarget.CITY]);
