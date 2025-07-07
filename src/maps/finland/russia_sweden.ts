@@ -145,6 +145,7 @@ export class FinlandBuildAction extends BuildAction {
       const trackConnectsBL = bottomLeft.trackExiting(TOP_RIGHT);
       const top = this.grid().get(data.coordinates.neighbor(Direction.TOP)) as Land;
       const trackConnectsTop = top.trackExiting(BOTTOM);
+      console.log(data.tileType, data.orientation);
 
       if(trackConnectsBL === undefined && trackConnectsTop === undefined){
         assert(data.tileType === 1, {
@@ -153,9 +154,14 @@ export class FinlandBuildAction extends BuildAction {
       }
 
       if(trackConnectsBL && trackConnectsTop === undefined){
-        assert(data.orientation === 1 || data.orientation === 6, {
-          invalidInput: "Can only build towards Russia, not from Russia.",
-        });
+        assert(
+          data.orientation === 1 || 
+          data.orientation === 6 ||
+          (data.tileType === 2 && data.orientation === 2),
+          {
+            invalidInput: "Can only build towards Russia, not from Russia.",
+          }
+        );
       }
     }
   }
