@@ -1,3 +1,4 @@
+
 import { ReactNode, useCallback, useState } from "react";
 import {
   Button,
@@ -43,17 +44,6 @@ import {
   useViewSettings,
 } from "../utils/injection_context";
 import { ManualGoodsGrowth } from "./india-steam-brothers/goods_growth";
-import {
-  Button,
-  Icon,
-  Form,
-  FormSelect,
-  DropdownProps,
-  FormGroup,
-  FormField,
-} from "semantic-ui-react";
-import { FinlandRemoveCube } from "../../maps/finland/remove_cube";
-import { RSDELIVERY } from "../../maps/finland/russia_sweden";
 import { MoveGoods } from "./move_goods_action_summary";
 import { Build } from "./build_action_summary";
 import * as React from "react";
@@ -91,12 +81,7 @@ export function ActionSummary() {
     case Phase.BUILDING:
       return <Build />;
     case Phase.MOVING:
-      return  (
-        <>
-        <MoveGoods />
-        <FinlandCube />
-        </>
-      );
+      return <MoveGoods />;
     case Phase.END_GAME:
       return <EndGame />;
     case Phase.DEURBANIZATION:
@@ -304,58 +289,6 @@ function SpecialActionSelector() {
 
 function EndGame() {
   return <GenericMessage>This game is over.</GenericMessage>;
-}
-
-function MoveGoods() {
-  const {
-    emit: emitLoco,
-    canEmit,
-    canEmitUserId,
-    getErrorMessage,
-  } = useEmptyAction(LocoAction);
-  const { emit: emitPass } = useEmptyAction(MovePassAction);
-  const viewSettings = useViewSettings();
-  const rsDelivery = useInject(() => {
-    const state = injectState(RSDELIVERY);
-    return state.isInitialized() ? state() : undefined;
-  }, []);
-
-  const message = viewSettings.moveGoodsMessage?.();
-
-  if (canEmitUserId == null || rsDelivery) {
-    return <></>;
-  }
-
-  if (!canEmit) {
-    return (
-      <GenericMessage>
-        <Username userId={canEmitUserId} /> must move a good.
-      </GenericMessage>
-    );
-  }
-
-  const locoDisabledReason = getErrorMessage();
-
-  return (
-    <div>
-      <GenericMessage>{message ?? "You must move a good."}</GenericMessage>
-      <MaybeTooltip tooltip={locoDisabledReason}>
-        <Button
-          icon
-          labelPosition="left"
-          color="green"
-          onClick={emitLoco}
-          disabled={locoDisabledReason != null}
-        >
-          <Icon name="train" />
-          Locomotive
-        </Button>
-      </MaybeTooltip>
-      <Button negative onClick={emitPass}>
-        Pass
-      </Button>
-    </div>
-  );
 }
 
 function numberFormat(num: number): string {
