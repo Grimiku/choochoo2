@@ -30,7 +30,6 @@ import { useOnClick } from "./click_target";
 import { HexGrid } from "./hex_grid";
 import { EnhancedMoveData } from "./move_good";
 import { InterceptMoveModal, useMoveInterceptionState } from "./move_intercept";
-import { FinlandRemoveCube, FinlandSelectGoodData } from "../../maps/finland/remove_cube";
 
 function getHighlightedConnections(
   grid: Grid,
@@ -96,19 +95,14 @@ function confirmDeliveryCb(
     const endingStop = grid.get(peek(moveAction.path).endingStop) as City;
     if (maybeInterceptMove(moveAction, endingStop.name())) return;
     const income = moveInstance.value.calculateIncome(moveAction);
-    const hasNeutral = [...income].some(([owner]) => owner === PlayerColor.NEUTRAL);
     const counts = [...income]
-      .filter(([a]) => a != null && a !== PlayerColor.NEUTRAL)
+      .filter(([a]) => a != null)
       .map(
         ([owner, income]) =>
           `${owner === player ? "you" : playerColorToString(owner)} ${income} income`,
       );
     const countsStr = counts.length > 0 ? counts.join(", ") : "zero income";
-    let message: string;
-      if(hasNeutral === true){
-        message = `Deliver to ${endingStop.name()}? This will use a neutral link and will give ${countsStr}.`;
-      } else {
-        message = `Deliver to ${endingStop.name()}? This will give ${countsStr}.`;}
+    const message = `Deliver to ${endingStop.name()}? This will give ${countsStr}.`;
     confirm(message, {
       confirmButton: "Confirm Delivery",
       cancelButton: "Cancel",

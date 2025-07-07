@@ -40,7 +40,7 @@ export const SWEDEN_TEMP: LandData = {
   type: SpaceType.UNPASSABLE,
 };
 
-const FOUR_LOCO_FLAG = new Key("fourLocoFlag", { parse: z.boolean().parse });
+export const FOUR_LOCO_FLAG = new Key("fourLocoFlag", { parse: z.boolean().parse });
 export const RSDELIVERY = new Key("deliveredRS", { parse: z.boolean().parse });
 export const RSDELIVERY_LOCATION = new Key("lastDeliveryLocation", { parse: CoordinatesZod.parse });
 

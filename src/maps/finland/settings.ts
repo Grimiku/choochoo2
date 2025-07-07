@@ -23,7 +23,7 @@ export class FinlandMapSettings implements MapSettings {
   readonly interCityConnections = interCityConnections(map, [
        {connects : ["Espoo", "Helsinki"] },
        {connects : ["Helsinki", "Vantaa"] },
-      ]).map((connection) => ({ ...connection, owner: { color: PlayerColor.NEUTRAL }, }));
+      ]).map((connection) => ({ ...connection, owner: { color: undefined }, }));
 
   getOverrides() {
     return [

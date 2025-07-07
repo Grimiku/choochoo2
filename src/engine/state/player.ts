@@ -12,7 +12,6 @@ export enum PlayerColor {
   BLUE,
   BROWN,
   WHITE,
-  NEUTRAL,
 }
 
 export const PlayerColorZod = z.nativeEnum(PlayerColor);
@@ -46,8 +45,7 @@ export function playerColorToString(
   | "blue"
   | "brown"
   | "white"
-  | "grey"
-  | "neutral" {
+  | "grey" {
   switch (playerColor) {
     case PlayerColor.RED:
       return "red";
@@ -65,8 +63,6 @@ export function playerColorToString(
       return "brown";
     case PlayerColor.WHITE:
       return "white";
-    case PlayerColor.NEUTRAL:
-      return "neutral";
     case undefined:
       return "grey";
     default:
