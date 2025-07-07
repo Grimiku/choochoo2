@@ -33,6 +33,7 @@ import {
   StLuciaBidAction,
   StLuciaPassAction,
 } from "../../maps/st-lucia/bidding";
+import { FinlandCube } from "../../maps/finland/finland_cube"
 import { iterate } from "../../utils/functions";
 import { assertNever } from "../../utils/validate";
 import { Username } from "../components/username";
@@ -81,7 +82,12 @@ export function ActionSummary() {
     case Phase.BUILDING:
       return <Build />;
     case Phase.MOVING:
-      return <MoveGoods />;
+      return(
+        <>
+        <MoveGoods />
+        <FinlandCube />
+        </>
+      );
     case Phase.END_GAME:
       return <EndGame />;
     case Phase.DEURBANIZATION:

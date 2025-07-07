@@ -16,6 +16,7 @@ import { useConfirm } from "../components/confirm";
 import { useAction } from "../services/action";
 import { useViewSettings } from "../utils/injection_context";
 import { EnhancedMoveData, useMoveOnClick } from "./move_good";
+import { FinlandRemoveCube, FinlandSelectGoodData } from "../../maps/finland/remove_cube";
 
 export enum ClickTarget {
   GOOD = 1,
@@ -79,6 +80,20 @@ function useBuildOnClick(on: OnClickRegister) {
   return isPending;
 }
 
+function useRemoveCube(on: OnClickRegister) {
+  const { canEmit, emit, isPending } = useAction(FinlandRemoveCube);
+  
+  if (canEmit) {
+    on(ClickTarget.GOOD, (space, good) => {
+      emit({
+        good,
+        coordinates: space.coordinates,
+      });
+    });
+  }
+  return isPending;
+}
+
 function useHeavyLifting(
   on: OnClickRegister,
   moveActionProgress: EnhancedMoveData | undefined,
@@ -117,7 +132,7 @@ export function useOnClick(
     useAction(ConnectCitiesAction);
   const viewSettings = useViewSettings();
 
-  const clickFunctions: OnClickFunction[] = [useClaim, useBuildOnClick];
+  const clickFunctions: OnClickFunction[] = [useClaim, useBuildOnClick, useRemoveCube];
 
   if (viewSettings.useOnMapClick) {
     clickFunctions.unshift(viewSettings.useOnMapClick);

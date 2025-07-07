@@ -6,6 +6,9 @@ import { Username } from "../components/username";
 import { MaybeTooltip } from "../components/maybe_tooltip";
 import { Button, Icon } from "semantic-ui-react";
 import { GenericMessage } from "./action_summary";
+import { useInject } from "../utils/injection_context";
+import { injectState } from "../../engine/framework/execution_context";
+import { RSDELIVERY } from "../../maps/finland/russia_sweden";
 
 export function MoveGoods() {
   const {
@@ -16,10 +19,14 @@ export function MoveGoods() {
   } = useEmptyAction(LocoAction);
   const { emit: emitPass } = useEmptyAction(MovePassAction);
   const viewSettings = useViewSettings();
+  const rsDelivery = useInject(() => {
+    const state = injectState(RSDELIVERY);
+    return state.isInitialized() ? state() : undefined;
+  }, []);
 
   const message = viewSettings.moveGoodsMessage?.();
 
-  if (canEmitUserId == null) {
+  if (canEmitUserId == null || rsDelivery) {
     return <></>;
   }
 

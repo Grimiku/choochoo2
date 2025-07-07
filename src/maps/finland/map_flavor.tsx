@@ -50,6 +50,4 @@ export function FinlandTextures() {
       </g>
     </g>
   )
-
-
 }

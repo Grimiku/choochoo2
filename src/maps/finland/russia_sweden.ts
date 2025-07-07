@@ -145,7 +145,6 @@ export class FinlandBuildAction extends BuildAction {
       const trackConnectsBL = bottomLeft.trackExiting(TOP_RIGHT);
       const top = this.grid().get(data.coordinates.neighbor(Direction.TOP)) as Land;
       const trackConnectsTop = top.trackExiting(BOTTOM);
-      console.log(data.tileType, data.orientation);
 
       if(trackConnectsBL === undefined && trackConnectsTop === undefined){
         assert(data.tileType === 1, {
