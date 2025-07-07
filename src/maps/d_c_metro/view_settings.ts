@@ -1,4 +1,6 @@
 import { MapViewSettings } from "../view_settings";
+import { DCMetroMoveInterceptorModal } from "./move_intercept_modal";
+import { useProductionClick } from "./production_click";
 import { DCMetroRules } from "./rules";
 import { DCMetroMapSettings } from "./settings";
 
@@ -7,4 +9,6 @@ export class DCMetroViewSettings
   implements MapViewSettings
 {
   getMapRules = DCMetroRules;
+  useOnMapClick = useProductionClick;
+  moveInterceptModal = DCMetroMoveInterceptorModal;
 }

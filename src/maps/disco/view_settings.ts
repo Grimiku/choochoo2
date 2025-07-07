@@ -1,7 +1,9 @@
+import { ClickTarget, OnClickRegister } from "../../client/grid/click_target";
+import { useAction } from "../../client/services/action";
 import { useGrid, useInjected } from "../../client/utils/injection_context";
-import { Action } from "../../engine/state/action";
 import { MapViewSettings } from "../view_settings";
 import { DiscoMoveHelper } from "./deliver";
+import { ProductionAction } from "./production";
 import { DiscoInfernoRules } from "./rules";
 import { DiscoInfernoMapSettings } from "./settings";
 
@@ -10,13 +12,6 @@ export class DiscoInfernoViewSettings
   implements MapViewSettings
 {
   getMapRules = DiscoInfernoRules;
-
-  getActionDescription(action: Action): string | undefined {
-    if (action === Action.PRODUCTION) {
-      return "Draw two cubes and place them in one city after the move goods step.";
-    }
-    return undefined;
-  }
 
   moveGoodsMessage(): string | undefined {
     const helper = useInjected(DiscoMoveHelper);
@@ -34,4 +29,14 @@ export class DiscoInfernoViewSettings
         : `${movesRemaining} moves remaining`;
     return `You may continue the chain reaction from ${lastStopName} (${tag})`;
   }
+
+  useOnMapClick = useDiscoProduction;
+}
+
+function useDiscoProduction(on: OnClickRegister) {
+  const { canEmit, emit, isPending } = useAction(ProductionAction);
+  if (canEmit) {
+    on(ClickTarget.CITY, (city) => emit({ coordinates: city.coordinates }));
+  }
+  return isPending;
 }

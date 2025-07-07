@@ -13,6 +13,7 @@ const EmptyVariantConfig = z.object({
     GameKey.SCOTLAND,
     GameKey.ALABAMA_RAILWAYS,
     GameKey.SICILY,
+    GameKey.DENMARK,
     GameKey.DETROIT,
     GameKey.GERMANY,
     GameKey.LONDON,
@@ -29,6 +30,7 @@ const EmptyVariantConfig = z.object({
     GameKey.DISCO_INFERNO,
     GameKey.SOUL_TRAIN,
     GameKey.ST_LUCIA,
+    GameKey.CHESAPEAKE_AND_OHIO,
   ]),
 });
 type EmptyVariantConfig = z.infer<typeof EmptyVariantConfig>;

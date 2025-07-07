@@ -1,11 +1,12 @@
 import { ReactElement, ReactNode } from "react";
 import { VariantConfig } from "../api/variant_config";
 import { RowFactory } from "../client/game/final_overview_row";
-import { ClickTarget } from "../client/grid/click_target";
+import { ClickTarget, OnClickFunction } from "../client/grid/click_target";
 import { MapSettings } from "../engine/game/map_settings";
 import { Grid } from "../engine/map/grid";
 import { InterceptMoveModalProps } from "../engine/move/interceptor";
 import { Action } from "../engine/state/action";
+import { Phase } from "../engine/state/phase";
 
 export interface VariantConfigProps {
   config: Partial<VariantConfig>;
@@ -31,10 +32,12 @@ export interface MapViewSettings extends MapSettings {
   additionalSliders?: Array<() => ReactElement>;
   getVariantString?(variant: VariantConfig): string[] | undefined;
   getMapRules(props: RulesProps): ReactElement;
-  getActionDescription?(action: Action): string | undefined;
   getTexturesLayer?(props: TexturesProps): ReactNode;
+  getOverlayLayer?(props: TexturesProps): ReactNode;
   getFinalOverviewRows?(): RowFactory[];
   getActionCaption?(action: Action): string[] | string | undefined;
   moveGoodsMessage?(): string | undefined;
   moveInterceptModal?(props: InterceptMoveModalProps): ReactNode;
+  getActionSummary?(phase: Phase | undefined): undefined | (() => ReactNode);
+  useOnMapClick?: OnClickFunction;
 }

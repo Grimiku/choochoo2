@@ -8,7 +8,6 @@ import { Grid } from "../map/grid";
 import { calculateTrackInfo, Land, usesTownDisc } from "../map/location";
 import { isTownTile } from "../map/tile";
 import { Exit, TOWN, Track, TrackInfo } from "../map/track";
-import { SpaceType } from "../state/location_type";
 import { PlayerColor } from "../state/player";
 import { Direction, TileType } from "../state/tile";
 import { BuilderHelper } from "./helper";
@@ -20,11 +19,11 @@ export interface BuildInfo {
   playerColor: PlayerColor;
 }
 
-type InvalidBuildReason = string;
+export type InvalidBuildReason = string;
 
 export class Validator {
-  private readonly helper = inject(BuilderHelper);
-  private readonly grid = injectGrid();
+  protected readonly helper = inject(BuilderHelper);
+  protected readonly grid = injectGrid();
 
   tileMatchesTownType(coordinates: Coordinates, tileType: TileType) {
     const space = this.grid().get(coordinates) as Land;
@@ -44,7 +43,7 @@ export class Validator {
     if (space instanceof City) {
       return 'cannot build on a city';
     }
-    if (space == null || space.getLandType() === SpaceType.UNPASSABLE || space.getLandType() === SpaceType.WATER) {
+    if (space == null || space.isUnpassable()) {
       return 'cannot build on unpassable terrain';
     }
 
@@ -90,9 +89,9 @@ export class Validator {
     for (const track of [...newTracks, ...rerouted]) {
       for (const exit of track.exits) {
         if (exit === TOWN) continue;
-        const neighbor = grid.getNeighbor(space.coordinates, exit);
-        if (!space.connectionAllowed(exit, neighbor)) {
-          return 'cannot build towards an unpassable edge';
+        const reason = this.connectionAllowed(space, exit);
+        if (reason) {
+          return reason;
         }
       }
     }
@@ -118,6 +117,14 @@ export class Validator {
     if (this.exceedsTownDiscCount(grid, townDiscCount, coordinates, buildData)) {
       return `cannot use more than ${townDiscCount} town discs`;
     }
+  }
+
+  protected connectionAllowed(land: Land, exit: Direction): InvalidBuildReason|undefined {
+    const neighbor = this.grid().getNeighbor(land.coordinates, exit);
+    if (!land.connectionAllowed(exit, neighbor)) {
+      return 'cannot build towards an unpassable edge';
+    }
+    return undefined;
   }
 
   protected exceedsTownDiscCount(grid: Grid, townDiscCount: number, coordinates: Coordinates, buildData: BuildInfo): boolean {
@@ -155,18 +162,18 @@ export class Validator {
   }
 
   /** Similar to grid.getEnd, finds the track at the given exit, and traces it to the end */
-  private getEnd(coordinates: Coordinates, exit: Exit): [Coordinates, Exit] {
+  protected getEnd(coordinates: Coordinates, exit: Exit): [Coordinates, Exit] {
     if (exit === TOWN) {
       return [coordinates, exit];
     }
-    const neighbor = this.grid().connection(coordinates, exit);
-    if (!(neighbor instanceof Track)) {
+    const neighbor = this.grid().getTrackConnection(coordinates, exit);
+    if (neighbor == null) {
       return [coordinates, exit];
     }
     return this.grid().getEnd(neighbor, getOpposite(exit));
   }
 
-  private partitionTracks(space: Land, tracks: TrackInfo[]): Partitioned {
+  protected partitionTracks(space: Land, tracks: TrackInfo[]): Partitioned {
     const preserved: TrackInfo[] = [];
     const rerouted: TrackInfo[] = [];
     const newTracks: TrackInfo[] = [];
@@ -197,7 +204,7 @@ export class Validator {
     return oldTrackList[0];
   }
 
-  private newTrackExtendsPrevious(playerColor: PlayerColor, space: Land, newTracks: TrackInfo[]): boolean {
+  protected newTrackExtendsPrevious(playerColor: PlayerColor, space: Land, newTracks: TrackInfo[]): boolean {
     // if it's a town tile, only one of the track needs to be placeable
     if (space.hasTown()) {
       return newTracks.some((track) => this.newTrackConnectsToOwned(space, playerColor, track));
@@ -234,8 +241,8 @@ export class Validator {
     return newTracks.some((track) => {
       return track.exits.some((exit) => {
         if (exit == TOWN) return false;
-        const connection = this.grid().connection(space.coordinates, exit);
-        if (!(connection instanceof Track)) return false;
+        const connection = this.grid().getTrackConnection(space.coordinates, exit);
+        if (connection === undefined) return false;
         return connection.getOwner() != null && connection.getOwner() != playerColor;
       });
     });

@@ -1,5 +1,5 @@
 import { GameKey } from "../../api/game_key";
-import { MapSettings, ReleaseStage } from "../../engine/game/map_settings";
+import { KAOSKODY, MapSettings, ReleaseStage } from "../../engine/game/map_settings";
 import {
   DiscoLoco,
   DiscoMoveAction,
@@ -13,11 +13,14 @@ import {
   DiscoProductionPhase,
 } from "./production";
 import { DiscoStarter } from "./starter";
+import { DiscoActionNamingProvider } from "./actions";
 
 export class DiscoInfernoMapSettings implements MapSettings {
   static readonly key = GameKey.DISCO_INFERNO;
   readonly key = DiscoInfernoMapSettings.key;
   readonly name = "Disco Inferno";
+    readonly designer = "Ted Alspach";
+    readonly implementerId = KAOSKODY;
   readonly minPlayers = 3;
   readonly maxPlayers = 6;
   readonly startingGrid = map;
@@ -33,6 +36,7 @@ export class DiscoInfernoMapSettings implements MapSettings {
       DiscoMoveHelper,
       DiscoMovePhase,
       DiscoLoco,
+      DiscoActionNamingProvider,
     ];
   }
 }

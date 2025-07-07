@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { Immutable } from "../../utils/immutable";
-import { Good } from "./good";
+import { Good, GoodZod } from "./good";
+import { SpaceStyleZod } from "./location_style";
 import { SpaceType, SpaceTypeZod } from "./location_type";
 import { OnRollData } from "./roll";
 import { DirectionZod, MutableTileData } from "./tile";
-import { SpaceStyleZod } from "./location_style";
 
 export const MutableCityData = z.object({
   type: z.literal(SpaceType.CITY),
@@ -29,12 +29,18 @@ function isLandType(value: SpaceType): value is LandType {
   return value !== SpaceType.CITY;
 }
 
+export function isUnpassable(
+  value: SpaceType,
+): value is SpaceType.UNPASSABLE | SpaceType.WATER {
+  return value === SpaceType.UNPASSABLE || value === SpaceType.WATER;
+}
+
 export const MutableLandData = z.object({
   type: LandType,
   townName: z.string().optional(),
   tile: MutableTileData.optional(),
   terrainCost: z.number().optional(),
-  goods: z.array(z.number()).optional(),
+  goods: z.array(GoodZod).optional(),
   unpassableEdges: z.array(DirectionZod).optional(),
   style: SpaceStyleZod.optional(),
   mapSpecific: z.any().optional(),

@@ -14,10 +14,7 @@ import { Rotation } from "../../engine/game/map_settings";
 import { Grid, Space } from "../../engine/map/grid";
 import { Track } from "../../engine/map/track";
 import { Good } from "../../engine/state/good";
-import {
-  interCityConnectionEquals,
-  OwnedInterCityConnection,
-} from "../../engine/state/inter_city_connection";
+import { OwnedInterCityConnection } from "../../engine/state/inter_city_connection";
 import { Direction } from "../../engine/state/tile";
 import { ViewRegistry } from "../../maps/view_registry";
 import { Coordinates } from "../../utils/coordinates";
@@ -46,7 +43,7 @@ interface HexGridProps {
   spaceToConfirm?: Space;
   onSpaceConfirm?: () => void;
   onClick?: (space: Space, good?: Good) => void;
-  onClickInterCity?: (connects: Coordinates[]) => void;
+  onClickInterCity?: (id: string) => void;
   highlightedSpaces?: Set<Coordinates>;
   highlightedTrack?: Track[];
   highlightedConnections?: OwnedInterCityConnection[];
@@ -139,6 +136,7 @@ export function HexGrid({
   const terrainHexes = {
     beforeTextures: [] as ReactNode[][],
     afterTextures: [] as ReactNode[][],
+    afterOverlay: [] as ReactNode[][],
   };
   for (const space of spaces) {
     const isHighlighted = useMemo(
@@ -184,6 +182,7 @@ export function HexGrid({
 
     aggregate(terrainHexes.beforeTextures, newTerrainHexes.beforeTextures);
     aggregate(terrainHexes.afterTextures, newTerrainHexes.afterTextures);
+    aggregate(terrainHexes.afterOverlay, newTerrainHexes.afterOverlay);
 
     function aggregate<T>(outputArr: T[][], inputArr: T[]) {
       for (const [index, space] of inputArr.entries()) {
@@ -196,10 +195,18 @@ export function HexGrid({
   }
 
   let texturesLayer: ReactNode = null;
+  let overlayLayer: ReactNode = null;
   if (gameKey) {
     const mapSettings = ViewRegistry.singleton.get(gameKey);
     if (mapSettings.getTexturesLayer) {
       texturesLayer = mapSettings.getTexturesLayer({
+        size,
+        grid,
+        clickTargets,
+      });
+    }
+    if (mapSettings.getOverlayLayer) {
+      overlayLayer = mapSettings.getOverlayLayer({
         size,
         grid,
         clickTargets,
@@ -321,16 +328,19 @@ export function HexGrid({
               {terrainHexes.beforeTextures}
               {texturesLayer}
               {terrainHexes.afterTextures}
+              {overlayLayer}
+              {terrainHexes.afterOverlay}
               {grid.connections.map((connection, index) => (
                 <InterCityConnectionRender
                   key={index}
-                  highlighted={highlightedConnections?.some((c) =>
-                    interCityConnectionEquals(connection, c),
+                  highlighted={highlightedConnections?.some(
+                    (c) => connection.id === c.id,
                   )}
                   clickTargets={clickTargetsNormalized}
                   onClick={onClickInterCity}
                   size={size}
                   connection={connection}
+                  rotation={rotation}
                 />
               ))}
               {fullMapVersion && <SwedenProgressionGraphic />}

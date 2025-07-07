@@ -1,11 +1,17 @@
 import { ReactNode, useCallback, useState } from "react";
+import {
+  Button,
+  DropdownProps,
+  Form,
+  FormField,
+  FormGroup,
+  FormInput,
+  FormSelect,
+} from "semantic-ui-react";
 import { BuildAction } from "../../engine/build/build";
-import { DoneAction } from "../../engine/build/done";
 import { BuilderHelper } from "../../engine/build/helper";
 import { inject, injectState } from "../../engine/framework/execution_context";
 import { PHASE } from "../../engine/game/phase";
-import { LocoAction } from "../../engine/move/loco";
-import { MovePassAction } from "../../engine/move/pass";
 import { SelectAction as ActionSelectionSelectAction } from "../../engine/select_action/select";
 import { SkipAction } from "../../engine/select_action/skip";
 import { ShareHelper } from "../../engine/shares/share_helper";
@@ -16,6 +22,7 @@ import { BidAction } from "../../engine/turn_order/bid";
 import { TurnOrderHelper } from "../../engine/turn_order/helper";
 import { PassAction } from "../../engine/turn_order/pass";
 import { TurnOrderPassAction } from "../../engine/turn_order/turn_order_pass";
+import { PlaceWhiteCubeAction } from "../../maps/d_c_metro/production";
 import { ProductionPassAction } from "../../maps/disco/production";
 import { PassAction as DeurbanizationPassAction } from "../../maps/ireland/deurbanization";
 import { RepopulateAction } from "../../maps/montreal_metro/select_action/repopulate";
@@ -27,8 +34,6 @@ import {
 } from "../../maps/st-lucia/bidding";
 import { iterate } from "../../utils/functions";
 import { assertNever } from "../../utils/validate";
-import { useConfirm } from "../components/confirm";
-import { MaybeTooltip } from "../components/maybe_tooltip";
 import { Username } from "../components/username";
 import { useAction, useEmptyAction } from "../services/action";
 import {
@@ -49,6 +54,9 @@ import {
 } from "semantic-ui-react";
 import { FinlandRemoveCube } from "../../maps/finland/remove_cube";
 import { RSDELIVERY } from "../../maps/finland/russia_sweden";
+import { MoveGoods } from "./move_goods_action_summary";
+import { Build } from "./build_action_summary";
+import * as React from "react";
 
 const PASS_ACTION = "Pass" as const;
 type PassActionString = typeof PASS_ACTION;
@@ -58,6 +66,15 @@ type TurnOrderPassActionString = typeof TURN_ORDER_PASS_ACTION;
 
 export function ActionSummary() {
   const currentPhase = useActiveGameState(PHASE);
+  const viewSettings = useViewSettings();
+
+  if (viewSettings.getActionSummary) {
+    const ActionSummary = viewSettings.getActionSummary(currentPhase);
+    if (ActionSummary !== undefined) {
+      return <ActionSummary />;
+    }
+  }
+
   switch (currentPhase) {
     case Phase.SHARES:
       return <TakeShares />;
@@ -67,6 +84,7 @@ export function ActionSummary() {
       return (
         <>
           <Repopulate />
+          <PlaceWhiteCubes />
           <SpecialActionSelector />
         </>
       );
@@ -102,6 +120,24 @@ export function ActionSummary() {
     default:
       assertNever(currentPhase);
   }
+}
+
+function PlaceWhiteCubes() {
+  const { canEmit, canEmitUserId } = useAction(PlaceWhiteCubeAction);
+
+  if (canEmitUserId == null) {
+    return <></>;
+  }
+
+  if (!canEmit) {
+    return (
+      <GenericMessage>
+        <Username userId={canEmitUserId} /> must place white cubes.
+      </GenericMessage>
+    );
+  }
+
+  return <div>You must choose cities to place white cubes in.</div>;
 }
 
 function Repopulate() {
@@ -471,23 +507,32 @@ function TakeShares() {
       <p>Choose how many shares you would like to take out.</p>
       <Form>
         <FormGroup>
-          <FormSelect
-            disabled={isPending}
-            value={selectedShares}
-            onChange={(
-              event: React.SyntheticEvent<HTMLElement>,
-              data: DropdownProps,
-            ) => {
-              setSelectedShares(data.value as number);
-            }}
-            options={iterate(numShares + 1, (i) => {
-              return {
-                key: i,
-                value: i,
-                text: numberFormat(i),
-              };
-            })}
-          />
+          {numShares === Infinity ? (
+            <FormInput
+              type="number"
+              disabled={isPending}
+              value={selectedShares}
+              onChange={(_, data) => setSelectedShares(parseInt(data.value))}
+            />
+          ) : (
+            <FormSelect
+              disabled={isPending}
+              value={selectedShares}
+              onChange={(
+                event: React.SyntheticEvent<HTMLElement>,
+                data: DropdownProps,
+              ) => {
+                setSelectedShares(data.value as number);
+              }}
+              options={iterate(numShares + 1, (i) => {
+                return {
+                  key: i,
+                  value: i,
+                  text: numberFormat(i),
+                };
+              })}
+            />
+          )}
           <Button
             primary
             onClick={() => chooseValue(selectedShares)}
@@ -552,71 +597,4 @@ function GovernmentBuild() {
   }
 
   return <div>You can build {buildsRemaining} more government track.</div>;
-}
-
-function Build() {
-  const { emit: emitPass, canEmit, canEmitUserId } = useEmptyAction(DoneAction);
-  const confirm = useConfirm();
-  const [buildsRemaining, canUrbanize] = useInject(() => {
-    const helper = inject(BuilderHelper);
-    if (!canEmit) return [undefined, undefined];
-    return [helper.buildsRemaining(), helper.canUrbanize()];
-  }, [canEmit]);
-
-  const emitPassClick = useCallback(() => {
-    if (!canUrbanize) {
-      emitPass();
-      return;
-    }
-    confirm(
-      "You still have an urbanize available, are you sure you are done building?",
-    ).then((stillPass) => {
-      if (stillPass) {
-        emitPass();
-      }
-    });
-  }, [emitPass, canUrbanize]);
-
-  if (canEmitUserId == null) {
-    return <></>;
-  }
-
-  if (!canEmit) {
-    return (
-      <GenericMessage>
-        <Username userId={canEmitUserId} /> must build.
-      </GenericMessage>
-    );
-  }
-
-  return (
-    <div>
-      <p>
-        You can build {buildsRemaining} more track
-        {canUrbanize && " and urbanize"}.
-      </p>
-      <Button icon labelPosition="left" color="green" onClick={emitPassClick}>
-        <Icon name="check" />
-        Done Building
-      </Button>
-    </div>
-  );
-}
-
-function FinlandCube() {
-  const { canEmit, canEmitUserId } = useAction(FinlandRemoveCube);
-
-  if (canEmitUserId == null) {
-    return <></>;
-  }
-
-  if (!canEmit) {
-    return (
-      <GenericMessage>
-        <Username userId={canEmitUserId} /> must select a cube to remove from previous destination.
-      </GenericMessage>
-    );
-  }
-
-  return <div> You must select a cube to remove from previous destination.</div>;
 }

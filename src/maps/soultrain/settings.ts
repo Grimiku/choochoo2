@@ -1,6 +1,11 @@
 import { GameKey } from "../../api/game_key";
-import { MapSettings, ReleaseStage } from "../../engine/game/map_settings";
+import {
+  KAOSKODY,
+  MapSettings,
+  ReleaseStage,
+} from "../../engine/game/map_settings";
 import { CompleteLinkBuldModule } from "../../modules/complete_link_build";
+import { SoulTrainActionNamingProvider } from "./actions";
 import {
   SoulTrainBuildAction,
   SoulTrainBuilderHelper,
@@ -19,6 +24,8 @@ import { SoulTrainStarter } from "./starter";
 export class SoulTrainMapSettings implements MapSettings {
   readonly key = GameKey.SOUL_TRAIN;
   readonly name = "Soul Train";
+  readonly designer = "Ted Alspach";
+  readonly implementerId = KAOSKODY;
   readonly minPlayers = 3;
   readonly maxPlayers = 6;
   readonly startingGrid = map;
@@ -36,6 +43,7 @@ export class SoulTrainMapSettings implements MapSettings {
       SoulTrainMoveAction,
       SoulTrainBuilderHelper,
       SoulTrainAllowedActions,
+      SoulTrainActionNamingProvider,
     ];
   }
 

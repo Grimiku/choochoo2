@@ -7,7 +7,6 @@ import { Log } from "../game/log";
 import { AVAILABLE_CITIES, injectCurrentPlayer, injectGrid } from "../game/state";
 import { GridHelper } from "../map/grid_helper";
 import { Land } from "../map/location";
-import { Track } from "../map/track";
 import { Action } from "../state/action";
 import { toLetter } from "../state/city_group";
 import { SpaceType } from "../state/location_type";
@@ -47,10 +46,20 @@ export class UrbanizeAction implements ActionProcessor<UrbanizeData> {
   }
 
   process(data: UrbanizeData): boolean {
+    // Take ownership of connecting unowned track.
+    const location = this.gridHelper.lookup(data.coordinates) as Land;
+
+    const unownedConnections = allDirections.filter((direction) => {
+      const trackExiting = location.trackExiting(direction);
+      if (trackExiting != null) return false;
+      const connection = this.grid().getTrackConnection(data.coordinates, direction);
+      if (connection == null || connection.getOwner() != null) return false;
+      if (this.grid().getRoute(connection).some((track) => track.isClaimable())) return false;
+      return true;
+    });
+
     this.buildState.update((state) => state.hasUrbanized = true);
     const city = this.availableCities()[data.cityIndex];
-
-    const location = this.gridHelper.lookup(data.coordinates) as Land;
 
     this.availableCities.update((cities) => cities.splice(data.cityIndex, 1));
     this.gridHelper.set(data.coordinates, {
@@ -63,12 +72,8 @@ export class UrbanizeAction implements ActionProcessor<UrbanizeData> {
       mapSpecific: location.data.mapSpecific,
     });
 
-    // Take ownership of connecting unowned track.
-    for (const direction of allDirections) {
-      const connection = this.grid().connection(data.coordinates, direction);
-      if (!(connection instanceof Track) || connection.getOwner() != null) continue;
-      if (this.grid().getRoute(connection).some((track) => track.isClaimable())) continue;
-
+    for (const direction of unownedConnections) {
+      const connection = this.grid().getTrackConnection(data.coordinates, direction)!;
       this.gridHelper.setRouteOwner(connection, this.currentPlayer().color);
     }
 

@@ -1,5 +1,10 @@
 import { GameKey } from "../../api/game_key";
-import { MapSettings, ReleaseStage } from "../../engine/game/map_settings";
+import {
+  KAOSKODY,
+  MapSettings,
+  ReleaseStage,
+} from "../../engine/game/map_settings";
+import { IndiaSteamBrothersActionNamingProvider } from "./actions";
 import { ExpensiveMountains } from "./costs";
 import {
   IndiaSteamBrothersBuildAction,
@@ -15,7 +20,9 @@ import {
 export class IndiaSteamBrothersMapSettings implements MapSettings {
   static readonly key = GameKey.INDIA_STEAM_BROTHERS;
   readonly key = IndiaSteamBrothersMapSettings.key;
-  readonly name = "India (Steam Brothers)";
+  readonly name = "India";
+  readonly designer = "Steam Brothers";
+  readonly implementerId = KAOSKODY;
   readonly minPlayers = 3;
   readonly maxPlayers = 6;
   readonly startingGrid = map;
@@ -29,6 +36,7 @@ export class IndiaSteamBrothersMapSettings implements MapSettings {
       IndiaSteamBrothersPhaseDelegator,
       IndiaSteamBrothersBuildAction,
       IndiaSteamBrothersUrbanizeAction,
+      IndiaSteamBrothersActionNamingProvider,
     ];
   }
 }

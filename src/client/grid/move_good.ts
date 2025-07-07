@@ -1,33 +1,93 @@
 import { toast } from "react-toastify";
 import { City } from "../../engine/map/city";
 import { Grid, Space } from "../../engine/map/grid";
-import { MoveData, Path } from "../../engine/move/move";
+import { MoveAction, MoveData, Path } from "../../engine/move/move";
 import { MoveValidator, RouteInfo } from "../../engine/move/validator";
+import { Good } from "../../engine/state/good";
 import { PlayerData } from "../../engine/state/player";
-import { HeavyLiftingData } from "../../maps/heavy_cardboard/heavy_lifting";
 import { Coordinates } from "../../utils/coordinates";
 import { InvalidInputError } from "../../utils/error";
-import { arrayEqualsIgnoreOrder, peek } from "../../utils/functions";
-import { Memoized } from "../utils/injection_context";
+import { peek } from "../../utils/functions";
+import { useAction } from "../services/action";
+import { useTypedCallback } from "../utils/hooks";
+import {
+  Memoized,
+  useCurrentPlayer,
+  useGrid,
+  useInjectedMemo,
+} from "../utils/injection_context";
+import { ClickTarget, OnClickRegister } from "./click_target";
 
-export function onMoveToSpaceCb(
+export function useMoveOnClick(
+  on: OnClickRegister,
+  moveActionProgress: EnhancedMoveData | undefined,
+  setMoveActionProgress: (d: EnhancedMoveData | undefined) => void,
+) {
+  const { canEmit, isPending } = useAction(MoveAction);
+
+  const onSelectGood = useTypedCallback(onSelectGoodCb, [
+    moveActionProgress,
+    setMoveActionProgress,
+  ]);
+  const moveValidator = useInjectedMemo(MoveValidator);
+  const grid = useGrid();
+  const player = useCurrentPlayer();
+
+  const onMoveToSpace = useTypedCallback(onMoveToSpaceCb, [
+    moveValidator,
+    moveActionProgress,
+    setMoveActionProgress,
+    grid,
+    player,
+  ]);
+
+  if (canEmit) {
+    on(ClickTarget.GOOD, (space, good) => {
+      if (!onSelectGood(space, good)) return false;
+    });
+    if (moveActionProgress?.good != null) {
+      on(ClickTarget.TOWN, (space) => {
+        onMoveToSpace(space);
+      });
+      on(ClickTarget.CITY, (space) => {
+        onMoveToSpace(space);
+      });
+    }
+  }
+  return isPending;
+}
+
+function onSelectGoodCb(
+  moveActionProgress: EnhancedMoveData | undefined,
+  setMoveActionProgress: (data: EnhancedMoveData | undefined) => void,
+) {
+  return function (space: Space, good: Good): boolean {
+    if (moveActionProgress != null) {
+      if (
+        moveActionProgress.startingCity.equals(space.coordinates) &&
+        moveActionProgress.good === good
+      ) {
+        setMoveActionProgress(undefined);
+        return true;
+      } else if (moveActionProgress.path.length > 0) {
+        // If there is an extensive path, ignore the select good call.
+        return false;
+      }
+    }
+    setMoveActionProgress({ path: [], startingCity: space.coordinates, good });
+    return true;
+  };
+}
+
+function onMoveToSpaceCb(
   moveValidator: Memoized<MoveValidator>,
   moveActionProgress: EnhancedMoveData | undefined,
   setMoveActionProgress: (data: EnhancedMoveData | undefined) => void,
   grid: Grid,
   player: PlayerData | undefined,
-  confirmHeavyLifting: (data: HeavyLiftingData) => Promise<boolean>,
 ) {
   return async (space?: Space) => {
     if (space == null || moveActionProgress == null || player == null) return;
-
-    // Heavy lifting.
-    const heavyLifting = await handleHeavyLifting(
-      moveActionProgress,
-      space,
-      confirmHeavyLifting,
-    );
-    if (heavyLifting) return;
 
     const newData = getNewMoveData(
       grid,
@@ -75,21 +135,6 @@ function getNewMoveData(
   } else {
     return redirectPath(moveActionProgress, space, grid, moveValidator, player);
   }
-}
-
-async function handleHeavyLifting(
-  moveActionProgress: MoveData,
-  space: Space,
-  maybeConfirmEmitHeavyCardboardMove: (
-    data: HeavyLiftingData,
-  ) => Promise<boolean>,
-): Promise<boolean> {
-  if (moveActionProgress.path.length > 0) return false;
-  return await maybeConfirmEmitHeavyCardboardMove({
-    startingCity: moveActionProgress.startingCity,
-    good: moveActionProgress.good,
-    endingCity: space.coordinates,
-  });
 }
 
 function findAllRoutes(
@@ -150,10 +195,7 @@ function redirectPath(
           routeInfo.startingTrack.equals(previousRoute.startingTrack)
       : routeInfo.type === "connection"
         ? previousRoute.type === "connection" &&
-          arrayEqualsIgnoreOrder(
-            routeInfo.connection.connects,
-            previousRoute.connection.connects,
-          )
+          routeInfo.connection.id === previousRoute.connection.id
         : previousRoute.type === "teleport";
   });
   return newDatas[(previousRouteExitIndex + 1) % newDatas.length];

@@ -11,7 +11,7 @@ import { City } from "../../engine/map/city";
 import { getOpposite } from "../../engine/map/direction";
 import { GridHelper } from "../../engine/map/grid_helper";
 import { Land } from "../../engine/map/location";
-import { TOWN, Track } from "../../engine/map/track";
+import { TOWN } from "../../engine/map/track";
 import { MoveHelper } from "../../engine/move/helper";
 import { MovePhase } from "../../engine/move/phase";
 import { AllowedActions } from "../../engine/select_action/allowed_actions";
@@ -95,7 +95,10 @@ export class HeavyLiftingAction implements ActionProcessor<HeavyLiftingData> {
       invalidInput: "must start from a city",
     });
     assert(endingCity instanceof City, {
-      invalidInput: "must start from a city",
+      invalidInput: "must end on a city",
+    });
+    assert(!startingCity.isSameCity(endingCity), {
+      invalidInput: "cannot deliver to the same city",
     });
     assert(startingCity.name() !== "Madeira", {
       invalidInput: "cannot deliver from Madeira",
@@ -133,11 +136,11 @@ export class HeavyLiftingAction implements ActionProcessor<HeavyLiftingData> {
       );
     } else {
       return allDirections.some((direction) => {
-        const track = this.grid().connection(
+        const track = this.grid().getTrackConnection(
           startingCity.coordinates,
           direction,
         );
-        if (!(track instanceof Track)) return false;
+        if (track === undefined) return false;
         if (track.getOwner() !== this.currentPlayer().color) return false;
         const [endTrack, exit] = this.grid().getEnd(
           track,

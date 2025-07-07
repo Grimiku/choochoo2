@@ -1,5 +1,10 @@
 import { GameKey } from "../../api/game_key";
-import { MapSettings, ReleaseStage } from "../../engine/game/map_settings";
+import {
+  KAOSKODY,
+  MapSettings,
+  ReleaseStage,
+} from "../../engine/game/map_settings";
+import { StLuciaActionNamingProvider } from "./actions";
 import { StLuciaAllowedActions } from "./allowed_actions";
 import {
   StLuciaPhaseDelegator,
@@ -12,6 +17,8 @@ import { StLuciaStarter } from "./starter";
 export class StLuciaMapSettings implements MapSettings {
   readonly key = GameKey.ST_LUCIA;
   readonly name = "St. Lucia";
+  readonly designer = "Ted Alspach";
+  readonly implementerId = KAOSKODY;
   readonly minPlayers = 2;
   readonly maxPlayers = 2;
   readonly startingGrid = map;
@@ -24,6 +31,7 @@ export class StLuciaMapSettings implements MapSettings {
       StLuciaStarter,
       StLuciaPhaseDelegator,
       StLuciaAllowedActions,
+      StLuciaActionNamingProvider,
     ];
   }
 }

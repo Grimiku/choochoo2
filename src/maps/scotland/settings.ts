@@ -1,10 +1,15 @@
 import { GameKey } from "../../api/game_key";
-import { MapSettings, ReleaseStage } from "../../engine/game/map_settings";
+import {
+  GRIMIKU,
+  MapSettings,
+  ReleaseStage,
+} from "../../engine/game/map_settings";
 import { GoodsGrowthPhase } from "../../engine/goods_growth/phase";
 import { Module } from "../../engine/module/module";
 import { CityGroup } from "../../engine/state/city_group";
 import { ClaimRequiresUrbanizeModule } from "../../modules/claim_requires_urbanize";
 import { interCityConnections } from "../factory";
+import { ScotlandActionNamingProvider } from "./actions";
 import {
   ScotlandBuildAction,
   ScotlandConnectCitiesAction,
@@ -16,6 +21,8 @@ import { ScotlandPhaseEngine, ScotlandRoundEngine } from "./turn_order";
 export class ScotlandMapSettings implements MapSettings {
   readonly key = GameKey.SCOTLAND;
   readonly name = "Scotland";
+  readonly designer = "Kevin Duffy";
+  readonly implementerId = GRIMIKU;
   readonly minPlayers = 2;
   readonly maxPlayers = 2;
   readonly startingGrid = map;
@@ -32,6 +39,7 @@ export class ScotlandMapSettings implements MapSettings {
       ScotlandBuildAction,
       ScotlandMoveValidator,
       ScotlandPhaseEngine,
+      ScotlandActionNamingProvider,
     ];
   }
 

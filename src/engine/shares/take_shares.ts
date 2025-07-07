@@ -16,11 +16,14 @@ export class TakeSharesAction implements ActionProcessor<TakeSharesData> {
   static readonly action = "takeShares";
   readonly assertInput = TakeSharesData.parse;
 
-  private readonly log = inject(Log);
-  private readonly playerHelper = inject(PlayerHelper);
-  private readonly helper = inject(ShareHelper);
+  protected readonly log = inject(Log);
+  protected readonly playerHelper = inject(PlayerHelper);
+  protected readonly helper = inject(ShareHelper);
 
   validate(data: TakeSharesData) {
+    assert(data.numShares >= 0, {
+      invalidInput: `cannot take a negative number of shares`,
+    });
     assert(data.numShares <= this.helper.getSharesTheyCanTake(), {
       invalidInput: `cannot take more than ${this.helper.getMaxShares()} shares`,
     });

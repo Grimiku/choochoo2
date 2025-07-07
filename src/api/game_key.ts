@@ -12,6 +12,7 @@ export enum GameKey {
   ALABAMA_RAILWAYS = "alabama-railways",
   SICILY = "sicily",
   CYPRUS = "cyprus",
+  DENMARK = "denmark",
   DETROIT = "detroit-bankruptcy",
   GERMANY = "germany",
   DISCO_INFERNO = "disco-inferno",
@@ -30,6 +31,7 @@ export enum GameKey {
   SWEDEN = "SwedenRecycling",
   JAMAICA = "jamaica",
   HEAVY_CARDBOARD = "heavy-cardboard",
+  CHESAPEAKE_AND_OHIO = "chesapeake-and-ohio",
 }
 
 export const GameKeyZod = z.nativeEnum(GameKey);
