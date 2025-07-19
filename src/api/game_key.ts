@@ -5,7 +5,7 @@ export enum GameKey {
   TRISLAND = "trisland",
   PORTUGAL = "portugal",
   AUSTRALIA = "australia",
-  D_C_METRO = "d-c-metro",
+  DC_METRO = "dc-metro",
   SCANDINAVIA = "scandinavia",
   NEW_ENGLAND = "new-england",
   SCOTLAND = "scotland",
