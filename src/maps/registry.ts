@@ -2,6 +2,7 @@ import { FinlandMapSettings } from "./finland/settings";
 import { TrislandMapSettings } from "./trisland/settings";
 import { PortugalMapSettings } from "./portugal/settings";
 import { AustraliaMapSettings } from "./australia/settings";
+import { BarbadosMapSettings } from "./barbados/settings";
 import { GameKey } from "../api/game_key";
 import { MapSettings } from "../engine/game/map_settings";
 import { assert } from "../utils/validate";
@@ -44,6 +45,7 @@ export class MapRegistry {
 
   private constructor() {
     this.add(new FinlandMapSettings());
+    this.add(new BarbadosMapSettings());
     this.add(new TrislandMapSettings());
     this.add(new PortugalMapSettings());
     this.add(new AustraliaMapSettings());
