@@ -1,7 +1,3 @@
-import { FinlandMapSettings } from "./finland/settings";
-import { TrislandMapSettings } from "./trisland/settings";
-import { PortugalMapSettings } from "./portugal/settings";
-import { AustraliaMapSettings } from "./australia/settings";
 import { BarbadosMapSettings } from "./barbados/settings";
 import { GameKey } from "../api/game_key";
 import { MapSettings } from "../engine/game/map_settings";
@@ -38,6 +34,7 @@ import { SoulTrainMapSettings } from "./soultrain/settings";
 import { StLuciaMapSettings } from "./st-lucia/settings";
 import { SwedenRecyclingMapSettings } from "./sweden/settings";
 import { TrislandMapSettings } from "./trisland/settings";
+import { FinlandMapSettings } from "./finland/settings";
 
 export class MapRegistry {
   static readonly singleton = new MapRegistry();

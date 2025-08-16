@@ -1,8 +1,3 @@
-import { FinlandViewSettings } from "./finland/view_settings";
-import { TrislandViewSettings } from "./trisland/view_settings";
-import { PortugalViewSettings } from "./portugal/view_settings";
-import { AustraliaViewSettings } from "./australia/view_settings";
-import { DCMetroViewSettings } from "./d_c_metro/view_settings";
 import { BarbadosViewSettings } from "./barbados/view_settings";
 import { GameKey } from "../api/game_key";
 import { assert } from "../utils/validate";
@@ -38,6 +33,7 @@ import { SoulTrainViewSettings } from "./soultrain/view_settings";
 import { StLuciaViewSettings } from "./st-lucia/view_settings";
 import { SwedenRecyclingViewSettings } from "./sweden/view_settings";
 import { TrislandViewSettings } from "./trisland/view_settings";
+import { FinlandViewSettings } from "./finland/view_settings";
 import { MapViewSettings } from "./view_settings";
 
 export class ViewRegistry {
